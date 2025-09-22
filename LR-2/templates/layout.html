@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{{block "title" .}}Умный дом{{end}}</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <header>
+        <a href="/devices" class="nav-btn">Главная</a>
+        <a href="/request" class="nav-btn cart-btn">
+            Корзина
+            <span class="cart-count">5</span> <!-- Исправлено на 5 -->
+        </a>
+    </header>
+    <main>
+        {{block "content" .}}{{end}}
+    </main>
+</body>
+</html>

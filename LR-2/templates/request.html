@@ -1,0 +1,67 @@
+{{define "content"}}
+<div class="request-container">
+    <h1 class="request-title">Расчет:</h1>
+    
+    <div class="address-section">
+        <h2>Адрес дома, квартиры:</h2>
+        <p class="address-value">{{.Request.Address}}</p>
+    </div>
+
+    {{if .Request.DeviceRequests}}
+    <div class="devices-section">
+        <h2>Устройства в заявке:</h2>
+        {{range $dr := .Request.DeviceRequests}}
+            {{range $d := $.Devices}}
+                {{if eq $d.ID $dr.DeviceID}}
+                <div class="request-item">
+                    <div class="item-image-frame">
+                        <img src="/static/img/{{$d.Image}}" alt="{{$d.Name}}" class="item-image">
+                    </div>
+                    <div class="item-info">
+                        <h3>{{$d.Name}}</h3>
+                        <p>{{$d.Model}}</p>
+                    </div>
+                    <div class="item-quantity">
+                        <div class="quantity-control">
+                            <button class="qty-btn minus">-</button>
+                            <span class="qty-value">{{$dr.Quantity}}</span>
+                            <button class="qty-btn plus">+</button>
+                        </div>
+                        
+                        <!-- Блок расчета трафика для устройства -->
+                        <div class="traffic-calculation">
+                            <div class="traffic-line">
+                                <span>Трафик устройства:</span>
+                                <span class="traffic-number">0.5 Kб/ч</span>
+                            </div>
+                            <div class="traffic-line">
+                                <span>× количество:</span>
+                                <span class="traffic-number">{{$dr.Quantity}}</span>
+                            </div>
+                            <div class="traffic-line total">
+                                <span>Итого:</span>
+                                <span class="traffic-number">1.5 Kб/ч</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {{end}}
+            {{end}}
+        {{end}}
+    </div>
+
+    <div class="calculation-section">
+        <button class="btn-calculate">Рассчитать</button>
+        <div class="traffic-result">
+            <span>Общий объем трафика:</span>
+            <span class="traffic-value">3.5 Kб/ч</span>
+        </div>
+    </div>
+    {{else}}
+    <div class="empty-cart">
+        <h2>Заявка пуста</h2>
+        <p>Демонстрационная страница расчета</p>
+    </div>
+    {{end}}
+</div>
+{{end}}

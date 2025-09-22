@@ -1,0 +1,599 @@
+/* Основные стили */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #ffffff;
+    color: #333;
+}
+
+/* Шапка */
+header {
+    background: rgba(170, 181, 239, 1);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-btn {
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+/* Поиск */
+.search-section {
+    padding: 2rem;
+    text-align: center;
+}
+
+.search-section input {
+    width: 1534px;
+    height: 86px;
+    padding: 0 2rem;
+    border: none;
+    border-radius: 35px;
+    background: rgba(220, 200, 255, 0.59);
+    font-size: 1.2rem;
+}
+
+/* Сетка устройств */
+.devices-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 330px);
+    gap: 2rem;
+    justify-content: center;
+    padding: 2rem;
+    margin: 0 auto;
+    max-width: 1920px;
+}
+
+/* Карточка устройства - невидимая рамка */
+.device-card {
+    width: 330px;
+    height: 347px;
+    background: transparent;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    position: relative;
+}
+
+.device-image {
+    width: 222px;
+    height: 164px;
+    object-fit: contain;
+    margin-bottom: 1rem;
+}
+
+.device-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: black;
+    margin-bottom: 0.5rem;
+}
+
+/* Фиксированный контейнер для описания */
+.device-description {
+    font-size: 14px;
+    font-weight: 300;
+    color: black;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1rem;
+    width: 100%;
+    line-height: 1.3;
+}
+
+/* Кнопки прижимаем к низу карточки */
+/* ... остальные стили ... */
+
+.btn-details {
+    width: 130px;
+    height: 42px;
+    background: rgba(187, 186, 187, 0.65);
+    color: rgba(0, 0, 0, 1);
+    border: none;
+    border-radius: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+    flex-shrink: 0;
+    /* Добавляем эти свойства */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none; /* Убираем подчеркивание */
+}
+
+.btn-add {
+    width: 130px;
+    height: 42px;
+    background: rgba(87, 0, 255, 0.65);
+    color: rgba(255, 255, 255, 1);
+    border: none;
+    border-radius: 16px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 400;
+    cursor: pointer;
+    flex-shrink: 0;
+    /* Добавляем эти свойства */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Убедимся, что все кнопки выровнены */
+.device-buttons {
+    display: flex;
+    gap: 0.8rem;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: nowrap;
+    position: absolute;
+    bottom: 1.5rem;
+    left: 0;
+    right: 0;
+    align-items: center; /* Добавляем выравнивание по центру */
+}
+
+
+
+
+
+/* -------------------------------------------------------------------------------------------------*/
+
+
+
+
+
+
+
+/* Детальная страница устройства */
+.device-detail-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.device-content {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+/* Левая часть - изображение */
+.device-image-section {
+    flex: 1;
+}
+
+.image-placeholder {
+    width: 560px;
+    height: 560px;
+    border-radius: 50px;
+    background: rgba(196, 196, 196, 0.41);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.main-device-image {
+    width: 330px;
+    height: 440px;
+    object-fit: contain;
+}
+
+/* Правая часть - характеристики */
+.device-info-section {
+    flex: 1;
+}
+
+.specs-title {
+    font-size: 24px;
+    font-weight: 800;
+    color: black;
+    margin-bottom: 2rem;
+}
+
+.specs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
+}
+
+.spec-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #eee;
+}
+
+.spec-name {
+    font-size: 20px;
+    font-weight: 600;
+    color: #4a4a4a;
+}
+
+.spec-value {
+    font-size: 20px;
+    font-weight: 300;
+    color: #4a4a4a;
+    text-align: right;
+}
+
+/* Описание */
+.description-section {
+    margin-bottom: 3rem;
+}
+
+.description-section h3 {
+    font-size: 24px;
+    font-weight: 800;
+    color: black;
+    margin-bottom: 1rem;
+}
+
+.full-description {
+    font-size: 20px;
+    font-weight: 400;
+    color: black;
+    line-height: 1.4;
+    text-align: left;
+}
+
+/* Кнопка Добавить */
+.action-buttons {
+    text-align: center;
+}
+
+.btn-add-large {
+    width: 240px;
+    height: 72px;
+    background: rgba(87, 0, 255, 0.65);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 20px;
+    font-weight: 400;
+    cursor: pointer;
+}
+
+
+
+
+/* -------------------------------------------------------------------------------------------------*/
+
+
+/* Страница расчета */
+.request-container {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.request-title {
+    font-size: 36px;
+    font-weight: 800;
+    color: black;
+    margin-bottom: 2rem;
+}
+
+.address-section {
+    margin-bottom: 3rem;
+}
+
+.address-section h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: black;
+    margin-bottom: 0.5rem;
+}
+
+.address-value {
+    font-size: 18px;
+    color: #333;
+    padding: 1rem;
+    background: #f5f5f5;
+    border-radius: 8px;
+    max-width: 400px;
+}
+
+/* Список устройств */
+.devices-section {
+    margin-bottom: 3rem;
+}
+
+.devices-section h2 {
+    font-size: 18px;
+    font-weight: 500;
+    color: black;
+    margin-bottom: 1rem;
+}
+
+.request-item {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 15px;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.item-image-frame {
+    width: 130px;
+    height: 130px;
+    border-radius: 30px;
+    background: rgba(219, 218, 218, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.item-image {
+    width: 89px;
+    height: 119px;
+    object-fit: contain;
+}
+
+.item-info {
+    flex: 1;
+}
+
+.item-info h3 {
+    font-size: 18px;
+    font-weight: 500;
+    color: black;
+    margin-bottom: 0.5rem;
+}
+
+.item-info p {
+    font-size: 16px;
+    color: #666;
+}
+
+.item-quantity {
+    font-size: 16px;
+    font-weight: 500;
+    color: #333;
+}
+
+/* Расчет */
+.calculation-section {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+}
+
+.btn-calculate {
+    width: 263px;
+    height: 60px;
+    background: rgba(87, 0, 255, 0.65);
+    color: white;
+    border: none;
+    border-radius: 100px;
+    font-family: 'Inter', sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    cursor: pointer;
+}
+
+.traffic-result {
+    font-size: 18px;
+    font-weight: 500;
+    color: black;
+}
+
+.traffic-value {
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+/* Кнопки навигации */
+.navigation-buttons {
+    text-align: center;
+}
+
+.btn-secondary {
+    padding: 1rem 2rem;
+    background: rgba(187, 186, 187, 0.65);
+    color: black;
+    text-decoration: none;
+    border-radius: 25px;
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+/* Пустая корзина */
+.empty-cart {
+    text-align: center;
+    padding: 3rem;
+    background: #f8f9fa;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+.empty-cart h2 {
+    font-size: 24px;
+    color: #666;
+    margin-bottom: 1rem;
+}
+
+/* Счетчик количества */
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.qty-btn {
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(87, 0, 255, 0.65);
+    background: white;
+    color: rgba(87, 0, 255, 0.65);
+    border-radius: 6px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qty-btn:hover {
+    background: rgba(87, 0, 255, 0.1);
+}
+
+.qty-value {
+    width: 40px;
+    height: 30px;
+    border: 2px solid rgba(85, 85, 85, 1);
+    border-radius: 16px;
+    color: rgba(85, 85, 85, 1);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 19px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Адаптируем контейнер для счетчика */
+.item-quantity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.item-quantity span {
+    font-size: 14px;
+    color: #666;
+}
+
+
+
+/* -------------------------------------------------------------------------------------------------*/
+
+/* Счетчик корзины - крупнее и у нижнего правого края */
+.cart-btn {
+    position: relative;
+    display: flex;
+    align-items: center;
+    text-decoration: none;
+}
+
+.cart-count {
+    position: absolute;
+    bottom: -5px;    /* Смещаем к нижнему краю */
+    right: -8px;     /* Смещаем правее */
+    background: rgba(87, 0, 255, 1); /* Фиолетовый фон */
+    color: white;
+    border-radius: 50%;
+    width: 24px;     /* Увеличиваем размер */
+    height: 24px;    /* Увеличиваем размер */
+    text-align: center;
+    line-height: 24px; /* Центрируем по высоте */
+    font-size: 14px;   /* Увеличиваем цифру */
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* Убираем тень */
+    box-shadow: none;
+}
+
+/* Базовые стили кнопок */
+.nav-btn {
+    padding: 0.8rem 1.5rem;
+    color: white;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 1.1rem;
+    border-radius: 25px;
+    transition: background-color 0.3s ease;
+    position: relative;
+}
+
+.nav-btn:hover {
+    background-color: rgba(87, 0, 255, 0.3); /* Полупрозрачная подсветка */
+}
+
+
+
+/* -------------------------------------------------------------------------------------------------*/
+
+
+/* Блок расчета трафика для каждого устройства */
+.traffic-calculation {
+    margin-top: 1rem;
+    padding: 0.8rem;
+    background: rgba(87, 0, 255, 0.05);
+    border-radius: 12px;
+    border-left: 3px solid rgba(87, 0, 255, 0.3);
+}
+
+.traffic-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 0.3rem;
+    font-size: 14px;
+}
+
+.traffic-line.total {
+    font-weight: 600;
+    color: rgba(87, 0, 255, 1);
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid rgba(87, 0, 255, 0.2);
+}
+
+.traffic-number {
+    font-weight: 500;
+    color: rgba(87, 0, 255, 0.8);
+}
+
+/* Общий трафик */
+.traffic-result {
+    font-size: 18px;
+    font-weight: 500;
+    color: black;
+}
+
+.traffic-value {
+    font-weight: bold;
+    color: rgba(87, 0, 255, 1);
+    margin-left: 0.5rem;
+}
+
+/* Адаптируем контейнер для quantity */
+.item-quantity {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+    min-width: 150px;
+}

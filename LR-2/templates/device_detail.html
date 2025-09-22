@@ -1,0 +1,36 @@
+{{define "content"}}
+<div class="device-detail-container">
+    <div class="device-content">
+        <!-- Левая часть - изображение -->
+        <div class="device-image-section">
+            <div class="image-placeholder">
+                <img src="/static/img/{{.Device.Image}}" alt="{{.Device.Name}}" class="main-device-image">
+            </div>
+        </div>
+
+        <!-- Правая часть - характеристики -->
+        <div class="device-info-section">
+            <h2 class="specs-title">Характеристики</h2>
+            <div class="specs-list">
+                {{range $key, $value := .Device.Specs}}
+                <div class="spec-item">
+                    <span class="spec-name">{{$key}}:</span>
+                    <span class="spec-value">{{$value}}</span>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    <!-- Полное описание -->
+    <div class="description-section">
+        <h3>Описание</h3>
+        <p class="full-description">{{.Device.DescriptionAll}}</p>
+    </div>
+
+    <!-- Кнопка Добавить -->
+    <div class="action-buttons">
+        <button class="btn-add-large">Добавить</button>
+    </div>
+</div>
+{{end}}

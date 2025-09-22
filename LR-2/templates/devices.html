@@ -1,0 +1,29 @@
+{{define "content"}}
+<div class="devices-container">
+    <!-- Поиск -->
+    <div class="search-section">
+        <form action="/devices" method="GET">
+            <input type="text" name="search" placeholder="Поиск" value="{{.Search}}">
+        </form>
+    </div>
+
+    <!-- Сетка устройств -->
+    <div class="devices-grid">
+        {{range .Devices}}
+        <div class="device-card">
+            <img src="/static/img/{{.Image}}" alt="{{.Name}}" class="device-image">
+            <h3 class="device-name">{{.Name}}</h3>
+            <p class="device-description">{{.Description}}</p>
+            <div class="device-buttons">
+                <a href="/devices/{{.ID}}" class="btn-details">Подробнее</a>
+                <button class="btn-add">Добавить</button>
+            </div>
+        </div>
+        {{else}}
+        <div class="no-devices">
+            <p>Устройства не найдены</p>
+        </div>
+        {{end}}
+    </div>
+</div>
+{{end}}
