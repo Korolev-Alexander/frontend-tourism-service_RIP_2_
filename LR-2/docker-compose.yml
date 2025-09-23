@@ -1,0 +1,53 @@
+services:
+  db:
+    image: postgres:12
+    volumes:
+      - postgresdb-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_DB: RIP
+      POSTGRES_PASSWORD: root
+
+  adminer:  # ← ДОБАВЛЯЕМ ЭТОТ СЕРВИС
+    image: adminer
+    ports:
+      - "8081:8080"
+    depends_on:
+      - db
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ACCESS_KEY: myaccesskey123
+      MINIO_SECRET_KEY: mysecretkey123456
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - minio
+
+  redis:
+    image: redis:6.2-alpine
+    ports:
+      - '6379:6379'
+    command: redis-server --requirepass password
+    volumes:
+      - redis-data:/data
+
+volumes:
+  postgresdb-data:
+  minio-data:
+  redis-data:
+  
