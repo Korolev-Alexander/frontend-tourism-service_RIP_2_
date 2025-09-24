@@ -13,6 +13,7 @@
         {{range .Items}}
         <div class="request-item">
             <div class="item-image-frame">
+                <!-- ИСПРАВИЛ: .Service.ImageURL -->
                 <img src="{{.Service.ImageURL}}" alt="{{.Service.Name}}" class="item-image">
             </div>
             <div class="item-info">
@@ -28,14 +29,10 @@
     </div>
 
     <div class="calculation-section">
-        <form action="/request/delete" method="POST" style="display: inline;">
+        <form action="/request/delete" method="POST">
             <input type="hidden" name="request_id" value="{{.Request.ID}}">
             <button type="submit" class="btn-calculate" style="background: #ff4444;">Удалить заявку</button>
         </form>
-        <div class="traffic-result">
-            <span>Общий объем трафика:</span>
-            <span class="traffic-value">{{.Request.TotalTraffic}} Kб/ч</span>
-        </div>
     </div>
     {{else}}
     <div class="empty-cart">

@@ -4,7 +4,8 @@
         <!-- Левая часть - изображение -->
         <div class="device-image-section">
             <div class="image-placeholder">
-                <img src="/static/img/{{.Device.Image}}" alt="{{.Device.Name}}" class="main-device-image">
+                <!-- ИСПРАВИЛ: .Device.ImageURL вместо .Device.Image -->
+                <img src="{{.Device.ImageURL}}" alt="{{.Device.Name}}" class="main-device-image">
             </div>
         </div>
 
@@ -12,12 +13,22 @@
         <div class="device-info-section">
             <h2 class="specs-title">Характеристики</h2>
             <div class="specs-list">
-                {{range $key, $value := .Device.Specs}}
                 <div class="spec-item">
-                    <span class="spec-name">{{$key}}:</span>
-                    <span class="spec-value">{{$value}}</span>
+                    <span class="spec-name">Модель:</span>
+                    <span class="spec-value">{{.Device.Model}}</span>
                 </div>
-                {{end}}
+                <div class="spec-item">
+                    <span class="spec-name">Протокол:</span>
+                    <span class="spec-value">{{.Device.Protocol}}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-name">Скорость данных:</span>
+                    <span class="spec-value">{{.Device.AvgDataRate}} Кбит/с</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-name">Трафик в час:</span>
+                    <span class="spec-value">{{.Device.DataPerHour}} Кб/ч</span>
+                </div>
             </div>
         </div>
     </div>
@@ -30,7 +41,22 @@
 
     <!-- Кнопка Добавить -->
     <div class="action-buttons">
-        <button class="btn-add-large">Добавить</button>
+        <button class="btn-add-large" onclick="addToCart('{{.Device.ID}}')">Добавить в корзину</button>
     </div>
 </div>
+
+<script>
+function addToCart(deviceId) {
+    fetch('/request/add', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'service_id=' + deviceId
+    }).then(response => {
+        if (response.ok) {
+            alert('Устройство добавлено в корзину');
+            window.location.href = '/request';
+        }
+    });
+}
+</script>
 {{end}}

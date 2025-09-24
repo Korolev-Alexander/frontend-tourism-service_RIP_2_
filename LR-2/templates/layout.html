@@ -8,13 +8,23 @@
 <body>
     <header>
         <a href="/devices" class="nav-btn">Главная</a>
+        <!-- ИСПРАВИЛ: убрал слеш -->
         <a href="/request" class="nav-btn cart-btn">
             Корзина
-            <span class="cart-count">5</span> <!-- Исправлено на 5 -->
+            <span class="cart-count" id="cartCount">0</span>
         </a>
     </header>
     <main>
         {{block "content" .}}{{end}}
     </main>
+
+    <script>
+        // Обновляем счетчик корзины
+        fetch('/request/count')
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('cartCount').textContent = data.count;
+            });
+    </script>
 </body>
 </html>
