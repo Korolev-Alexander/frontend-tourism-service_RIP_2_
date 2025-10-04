@@ -12,10 +12,10 @@ import (
 )
 
 var (
-	db               *gorm.DB
-	tmplDevices      = template.Must(template.ParseFiles("templates/layout.html", "templates/devices.html"))
-	tmplDeviceDetail = template.Must(template.ParseFiles("templates/layout.html", "templates/device_detail.html"))
-	tmplRequest      = template.Must(template.ParseFiles("templates/layout.html", "templates/request.html"))
+	db                    *gorm.DB
+	tmplSmartDevices      = template.Must(template.ParseFiles("templates/layout.html", "templates/smart_devices.html"))
+	tmplSmartDeviceDetail = template.Must(template.ParseFiles("templates/layout.html", "templates/smart_device_detail.html"))
+	tmplSmartCart         = template.Must(template.ParseFiles("templates/layout.html", "templates/smart_cart.html"))
 )
 
 func Init(database *gorm.DB) {
@@ -23,7 +23,7 @@ func Init(database *gorm.DB) {
 }
 
 // Вспомогательная функция для получения количества товаров
-func getCartCount(clientID uint) int64 {
+func getSmartCartCount(clientID uint) int64 {
 	var count int64
 	db.Model(&models.RequestService{}).
 		Joins("JOIN requests ON requests.id = request_services.request_id").
@@ -36,7 +36,7 @@ func getCartCount(clientID uint) int64 {
 func calculateTotalTraffic(requestID uint) float64 {
 	var total float64
 
-	// Суммируем трафик всех устройств в заявке
+	// Суммируем трафик всех устройств в корзине
 	db.Model(&models.RequestService{}).
 		Select("SUM(services.data_per_hour * request_services.quantity)").
 		Joins("JOIN services ON services.id = request_services.service_id").
@@ -46,8 +46,8 @@ func calculateTotalTraffic(requestID uint) float64 {
 	return total
 }
 
-// GET /devices - поиск услуг через GORM
-func DevicesHandler(w http.ResponseWriter, r *http.Request) {
+// GET /smart-devices - поиск устройств через GORM
+func SmartDevicesHandler(w http.ResponseWriter, r *http.Request) {
 	search := r.URL.Query().Get("search")
 
 	var services []models.Service
@@ -63,21 +63,21 @@ func DevicesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := tmplDevices.ExecuteTemplate(w, "layout.html", map[string]interface{}{
+	err := tmplSmartDevices.ExecuteTemplate(w, "layout.html", map[string]interface{}{
 		"Devices":   services,
 		"Search":    search,
-		"ShowCart":  true,            // Показываем корзину в хедере
-		"CartCount": getCartCount(1), // Обновляем счетчик
+		"ShowCart":  true,
+		"CartCount": getSmartCartCount(1),
 	})
 
 	if err != nil {
-		log.Printf("Template error in DevicesHandler: %v", err)
+		log.Printf("Template error in SmartDevicesHandler: %v", err)
 	}
 }
 
-// GET /devices/{id} - детальная страница устройства
-func DeviceDetailHandler(w http.ResponseWriter, r *http.Request) {
-	idStr := r.URL.Path[len("/devices/"):]
+// GET /smart-devices/{id} - детальная страница устройства
+func SmartDeviceDetailHandler(w http.ResponseWriter, r *http.Request) {
+	idStr := r.URL.Path[len("/smart-devices/"):]
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid device ID", http.StatusBadRequest)
@@ -93,10 +93,10 @@ func DeviceDetailHandler(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("📱 Device Detail - ID: %d, Name: %s, ImageURL: %s", device.ID, device.Name, device.ImageURL)
 
-	err = tmplDeviceDetail.ExecuteTemplate(w, "layout.html", map[string]interface{}{
+	err = tmplSmartDeviceDetail.ExecuteTemplate(w, "layout.html", map[string]interface{}{
 		"Device":    device,
-		"ShowCart":  false,           // НЕ показываем корзину в хедере на странице деталей
-		"CartCount": getCartCount(1), // Обновляем счетчик
+		"ShowCart":  false,
+		"CartCount": getSmartCartCount(1),
 	})
 
 	if err != nil {
@@ -105,9 +105,9 @@ func DeviceDetailHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// GET /request - просмотр заявки
-func RequestHandler(w http.ResponseWriter, r *http.Request) {
-	// Ищем черновую заявку для пользователя ID 1 (демо)
+// GET /smart-cart - просмотр корзины
+func SmartCartHandler(w http.ResponseWriter, r *http.Request) {
+	// Ищем черновую корзину для пользователя ID 1 (демо)
 	var request models.Request
 	var items []models.RequestService
 
@@ -120,11 +120,11 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 		request.TotalTraffic = calculateTotalTraffic(request.ID)
 	}
 
-	err := tmplRequest.ExecuteTemplate(w, "layout.html", map[string]interface{}{
+	err := tmplSmartCart.ExecuteTemplate(w, "layout.html", map[string]interface{}{
 		"Request":   request,
 		"Items":     items,
-		"ShowCart":  false,           // НЕ показываем корзину в хедере (мы уже в корзине)
-		"CartCount": getCartCount(1), // Обновляем счетчик
+		"ShowCart":  false,
+		"CartCount": getSmartCartCount(1),
 	})
 
 	if err != nil {
@@ -133,8 +133,8 @@ func RequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// POST /request/add - добавление в заявку
-func AddToRequestHandler(w http.ResponseWriter, r *http.Request) {
+// POST /smart-cart/add - добавление в корзину
+func AddToSmartCartHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -153,12 +153,12 @@ func AddToRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 1. НАХОДИМ ИЛИ СОЗДАЕМ ЧЕРНОВУЮ ЗАЯВКУ
+	// 1. НАХОДИМ ИЛИ СОЗДАЕМ ЧЕРНОВУЮ КОРЗИНУ
 	var request models.Request
 	result := db.Where("status = ? AND client_id = ?", "draft", 1).First(&request)
 
 	if result.Error != nil {
-		// СОЗДАЕМ НОВУЮ ЗАЯВКУ
+		// СОЗДАЕМ НОВУЮ КОРЗИНУ
 		request = models.Request{
 			Status:   "draft",
 			ClientID: 1,
@@ -167,7 +167,7 @@ func AddToRequestHandler(w http.ResponseWriter, r *http.Request) {
 		db.Create(&request)
 	}
 
-	// 2. ПРОВЕРЯЕМ, ЕСТЬ ЛИ УЖЕ ТАКАЯ УСЛУГА В ЗАЯВКЕ
+	// 2. ПРОВЕРЯЕМ, ЕСТЬ ЛИ УЖЕ ТАКАЯ УСЛУГА В КОРЗИНЕ
 	var existingRequestService models.RequestService
 	findResult := db.Where("request_id = ? AND service_id = ?", request.ID, sID).First(&existingRequestService)
 
@@ -186,11 +186,11 @@ func AddToRequestHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. РЕДИРЕКТ В КОРЗИНУ
-	http.Redirect(w, r, "/request", http.StatusSeeOther)
+	http.Redirect(w, r, "/smart-cart", http.StatusSeeOther)
 }
 
-// POST /request/delete - удаление заявки через RAW SQL (требование ТЗ)
-func DeleteRequestHandler(w http.ResponseWriter, r *http.Request) {
+// POST /smart-cart/delete - удаление корзины через RAW SQL (требование ТЗ)
+func DeleteSmartCartHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != "POST" {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		return
@@ -215,13 +215,13 @@ func DeleteRequestHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("🗑️ Deleted request: id=%s", requestID)
+	log.Printf("🗑️ Deleted cart: id=%s", requestID)
 	// РЕДИРЕКТ НА СТРАНИЦУ УСТРОЙСТВ ПОСЛЕ УДАЛЕНИЯ
-	http.Redirect(w, r, "/devices", http.StatusSeeOther)
+	http.Redirect(w, r, "/smart-devices", http.StatusSeeOther)
 }
 
-// GET /request/count - количество товаров в корзине
-func GetCartCountHandler(w http.ResponseWriter, r *http.Request) {
+// GET /smart-cart/count - количество товаров в корзине
+func GetSmartCartCountHandler(w http.ResponseWriter, r *http.Request) {
 	var count int64
 
 	db.Model(&models.RequestService{}).

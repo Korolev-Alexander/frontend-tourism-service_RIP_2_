@@ -24,17 +24,24 @@ func main() {
 	// Статические файлы
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
+	// Редирект с корневого пути на страницу устройств
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			http.Redirect(w, r, "/smart-devices", http.StatusSeeOther)
+			return
+		}
+		http.NotFound(w, r)
+	})
+
 	// Маршруты по ТЗ
-	http.HandleFunc("/devices", handlers.DevicesHandler)
-	http.HandleFunc("/devices/", handlers.DeviceDetailHandler)
+	http.HandleFunc("/smart-devices", handlers.SmartDevicesHandler)
+	http.HandleFunc("/smart-devices/", handlers.SmartDeviceDetailHandler)
 
-	// ОБА варианта для корзины
-	http.HandleFunc("/request", handlers.RequestHandler)  // без слеша
-	http.HandleFunc("/request/", handlers.RequestHandler) // со слешем
-
-	http.HandleFunc("/request/add", handlers.AddToRequestHandler)
-	http.HandleFunc("/request/delete", handlers.DeleteRequestHandler)
-	http.HandleFunc("/request/count", handlers.GetCartCountHandler)
+	// Корзина
+	http.HandleFunc("/smart-cart", handlers.SmartCartHandler)
+	http.HandleFunc("/smart-cart/add", handlers.AddToSmartCartHandler)
+	http.HandleFunc("/smart-cart/delete", handlers.DeleteSmartCartHandler)
+	http.HandleFunc("/smart-cart/count", handlers.GetSmartCartCountHandler)
 
 	log.Println("🚀 Сервер запущен на http://localhost:8080")
 	http.ListenAndServe(":8080", nil)

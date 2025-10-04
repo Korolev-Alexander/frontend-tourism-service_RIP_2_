@@ -2,7 +2,7 @@
 <div class="devices-container">
     <!-- Поиск -->
     <div class="search-section">
-        <form action="/devices" method="GET">
+        <form action="/smart-devices" method="GET">
             <input type="text" name="search" placeholder="Поиск" value="{{.Search}}">
         </form>
     </div>
@@ -15,10 +15,9 @@
             <h3 class="device-name">{{.Name}}</h3>
             <p class="device-description">{{.Description}}</p>
             <div class="device-buttons">
-                <a href="/devices/{{.ID}}" class="btn-details">Подробнее</a>
-                
+                <a href="/smart-devices/{{.ID}}" class="btn-details">Подробнее</a>
                 <!-- ФОРМА вместо JS -->
-                <form action="/request/add" method="POST" style="display: inline;">
+                <form action="/smart-cart/add" method="POST" style="display: inline;">
                     <input type="hidden" name="service_id" value="{{.ID}}">
                     <button type="submit" class="btn-add">Добавить</button>
                 </form>

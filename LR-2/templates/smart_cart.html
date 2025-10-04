@@ -9,7 +9,7 @@
     </div>
 
     <div class="devices-section">
-        <h2>Устройства в заявке:</h2>
+        <h2>Устройства в корзине:</h2>
         {{range .Items}}
         <div class="request-item">
             <div class="item-image-frame">
@@ -28,9 +28,9 @@
     </div>
 
     <div class="calculation-section">
-        <form action="/request/delete" method="POST" style="display: inline;">
+        <form action="/smart-cart/delete" method="POST" style="display: inline;">
             <input type="hidden" name="request_id" value="{{.Request.ID}}">
-            <button type="submit" class="btn-calculate" style="background: #ff4444;">Удалить заявку</button>
+            <button type="submit" class="btn-calculate" style="background: #ff4444;">Удалить корзину</button>
         </form>
         <div class="traffic-result">
             <span>Общий объем трафика:</span>
@@ -41,7 +41,7 @@
     <div class="empty-cart">
         <h2>Корзина пуста</h2>
         <p>Добавьте устройства из каталога</p>
-        <a href="/devices" class="btn-secondary">Перейти к каталогу</a>
+        <a href="/smart-devices" class="btn-secondary">Перейти к каталогу</a>
     </div>
     {{end}}
 </div>
