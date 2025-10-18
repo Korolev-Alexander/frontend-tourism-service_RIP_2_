@@ -12,17 +12,16 @@ import (
 	"gorm.io/gorm"
 )
 
-type ServiceAPIHandler struct {
+type SmartDeviceAPIHandler struct {
 	db *gorm.DB
 }
 
-func NewServiceAPIHandler(db *gorm.DB) *ServiceAPIHandler {
-	return &ServiceAPIHandler{db: db}
+func NewSmartDeviceAPIHandler(db *gorm.DB) *SmartDeviceAPIHandler {
+	return &SmartDeviceAPIHandler{db: db}
 }
 
-// GET /api/services - список с фильтрацией
-func (h *ServiceAPIHandler) GetServices(w http.ResponseWriter, r *http.Request) {
-	// Добавляем CORS headers для работы с Postman
+// GET /api/smart-devices - список с фильтрацией
+func (h *SmartDeviceAPIHandler) GetSmartDevices(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -35,7 +34,7 @@ func (h *ServiceAPIHandler) GetServices(w http.ResponseWriter, r *http.Request) 
 	search := r.URL.Query().Get("search")
 	protocol := r.URL.Query().Get("protocol")
 
-	var services []models.Service
+	var devices []models.SmartDevice
 	query := h.db.Where("is_active = ?", true)
 
 	if search != "" {
@@ -47,25 +46,23 @@ func (h *ServiceAPIHandler) GetServices(w http.ResponseWriter, r *http.Request) 
 		query = query.Where("protocol = ?", protocol)
 	}
 
-	result := query.Find(&services)
+	result := query.Find(&devices)
 	if result.Error != nil {
 		http.Error(w, result.Error.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Сериализуем в JSON
-	var response []serializers.ServiceResponse
-	for _, service := range services {
-		response = append(response, serializers.ServiceToJSON(service))
+	var response []serializers.SmartDeviceResponse
+	for _, device := range devices {
+		response = append(response, serializers.SmartDeviceToJSON(device))
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
 
-// GET /api/services/{id} - одна запись
-func (h *ServiceAPIHandler) GetService(w http.ResponseWriter, r *http.Request) {
-	// CORS headers
+// GET /api/smart-devices/{id} - одна запись
+func (h *SmartDeviceAPIHandler) GetSmartDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -75,27 +72,26 @@ func (h *ServiceAPIHandler) GetService(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/services/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/smart-devices/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid service ID", http.StatusBadRequest)
+		http.Error(w, "Invalid device ID", http.StatusBadRequest)
 		return
 	}
 
-	var service models.Service
-	result := h.db.First(&service, id)
+	var device models.SmartDevice
+	result := h.db.First(&device, id)
 	if result.Error != nil {
-		http.Error(w, "Service not found", http.StatusNotFound)
+		http.Error(w, "Device not found", http.StatusNotFound)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(serializers.ServiceToJSON(service))
+	json.NewEncoder(w).Encode(serializers.SmartDeviceToJSON(device))
 }
 
-// POST /api/services - добавление услуги
-func (h *ServiceAPIHandler) CreateService(w http.ResponseWriter, r *http.Request) {
-	// CORS headers
+// POST /api/smart-devices - добавление устройства
+func (h *SmartDeviceAPIHandler) CreateSmartDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -105,30 +101,30 @@ func (h *ServiceAPIHandler) CreateService(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	var req serializers.ServiceCreateRequest
+	var req serializers.SmartDeviceCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Валидация обязательных полей
 	if req.Name == "" {
 		http.Error(w, "Name is required", http.StatusBadRequest)
 		return
 	}
 
-	service := models.Service{
+	device := models.SmartDevice{
 		Name:           req.Name,
 		Model:          req.Model,
 		AvgDataRate:    req.AvgDataRate,
 		DataPerHour:    req.DataPerHour,
+		NamespaceURL:   req.NamespaceURL,
 		Description:    req.Description,
 		DescriptionAll: req.DescriptionAll,
 		Protocol:       req.Protocol,
 		IsActive:       true,
 	}
 
-	result := h.db.Create(&service)
+	result := h.db.Create(&device)
 	if result.Error != nil {
 		http.Error(w, result.Error.Error(), http.StatusInternalServerError)
 		return
@@ -136,12 +132,11 @@ func (h *ServiceAPIHandler) CreateService(w http.ResponseWriter, r *http.Request
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(serializers.ServiceToJSON(service))
+	json.NewEncoder(w).Encode(serializers.SmartDeviceToJSON(device))
 }
 
-// PUT /api/services/{id} - изменение услуги
-func (h *ServiceAPIHandler) UpdateService(w http.ResponseWriter, r *http.Request) {
-	// CORS headers
+// PUT /api/smart-devices/{id} - изменение устройства
+func (h *SmartDeviceAPIHandler) UpdateSmartDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -151,44 +146,43 @@ func (h *ServiceAPIHandler) UpdateService(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/services/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/smart-devices/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid service ID", http.StatusBadRequest)
+		http.Error(w, "Invalid device ID", http.StatusBadRequest)
 		return
 	}
 
-	var service models.Service
-	result := h.db.First(&service, id)
+	var device models.SmartDevice
+	result := h.db.First(&device, id)
 	if result.Error != nil {
-		http.Error(w, "Service not found", http.StatusNotFound)
+		http.Error(w, "Device not found", http.StatusNotFound)
 		return
 	}
 
-	var req serializers.ServiceCreateRequest
+	var req serializers.SmartDeviceCreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	// Обновляем поля
-	service.Name = req.Name
-	service.Model = req.Model
-	service.AvgDataRate = req.AvgDataRate
-	service.DataPerHour = req.DataPerHour
-	service.Description = req.Description
-	service.DescriptionAll = req.DescriptionAll
-	service.Protocol = req.Protocol
+	device.Name = req.Name
+	device.Model = req.Model
+	device.AvgDataRate = req.AvgDataRate
+	device.DataPerHour = req.DataPerHour
+	device.NamespaceURL = req.NamespaceURL
+	device.Description = req.Description
+	device.DescriptionAll = req.DescriptionAll
+	device.Protocol = req.Protocol
 
-	h.db.Save(&service)
+	h.db.Save(&device)
 
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(serializers.ServiceToJSON(service))
+	json.NewEncoder(w).Encode(serializers.SmartDeviceToJSON(device))
 }
 
-// DELETE /api/services/{id} - удаление услуги
-func (h *ServiceAPIHandler) DeleteService(w http.ResponseWriter, r *http.Request) {
-	// CORS headers
+// DELETE /api/smart-devices/{id} - удаление устройства
+func (h *SmartDeviceAPIHandler) DeleteSmartDevice(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
 	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
@@ -198,23 +192,22 @@ func (h *ServiceAPIHandler) DeleteService(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	idStr := strings.TrimPrefix(r.URL.Path, "/api/services/")
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/smart-devices/")
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		http.Error(w, "Invalid service ID", http.StatusBadRequest)
+		http.Error(w, "Invalid device ID", http.StatusBadRequest)
 		return
 	}
 
-	var service models.Service
-	result := h.db.First(&service, id)
+	var device models.SmartDevice
+	result := h.db.First(&device, id)
 	if result.Error != nil {
-		http.Error(w, "Service not found", http.StatusNotFound)
+		http.Error(w, "Device not found", http.StatusNotFound)
 		return
 	}
 
-	// Мягкое удаление - устанавливаем is_active = false
-	service.IsActive = false
-	h.db.Save(&service)
+	device.IsActive = false
+	h.db.Save(&device)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusNoContent)
