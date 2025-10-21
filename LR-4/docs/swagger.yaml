@@ -1,7 +1,23 @@
 openapi: 3.0.0
 info:
   title: Smart Devices API
-  description: API для системы умных устройств
+  description: |
+    # API для системы управления заявками на умные устройства
+    
+    ## Описание
+    Система позволяет клиентам создавать заявки на установку умных устройств, 
+    а модераторам - управлять этими заявками.
+    
+    ## Аутентификация
+    - Аутентификация через сессии и куки
+    - Сессии хранятся в Redis
+    - Без авторизации доступны только методы чтения
+    
+    ## Права доступа
+    - **Гость**: Только GET методы (чтение)
+    - **Клиент**: Свои заявки + чтение  
+    - **Модератор**: Все методы
+    
   version: 1.0.0
   contact:
     name: API Support
@@ -17,110 +33,211 @@ components:
       type: apiKey
       in: cookie
       name: session_id
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+      description: Session ID полученный при аутентификации
 
   schemas:
-    Client:
+    ErrorResponse:
       type: object
       properties:
-        id:
-          type: integer
-        username:
+        error:
           type: string
-        is_moderator:
-          type: boolean
-        is_active:
-          type: boolean
-
-    SmartDevice:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
+          example: "Authentication required"
+        message:
           type: string
-        model:
-          type: string
-        avg_data_rate:
-          type: number
-        data_per_hour:
-          type: number
-        namespace_url:
-          type: string
-        description:
-          type: string
-        description_all:
-          type: string
-        protocol:
-          type: string
-        is_active:
-          type: boolean
-        created_at:
-          type: string
-          format: date-time
-
-    SmartOrder:
-      type: object
-      properties:
-        id:
-          type: integer
-        status:
-          type: string
-          enum: [draft, formed, completed, rejected, deleted]
-        address:
-          type: string
-        total_traffic:
-          type: number
-        client_id:
-          type: integer
-        client_name:
-          type: string
-        formed_at:
-          type: string
-          format: date-time
-        completed_at:
-          type: string
-          format: date-time
-        moderator_id:
-          type: integer
-        moderator_name:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/SmartOrderItem'
+          example: "User authentication failed"
 
     LoginRequest:
       type: object
-      required:
-        - username
-        - password
+      required: [username, password]
       properties:
         username:
           type: string
+          example: "client1"
         password:
           type: string
+          example: "pass123"
 
     LoginResponse:
       type: object
       properties:
         success:
           type: boolean
+          example: true
         user:
-          $ref: '#/components/schemas/Client'
+          type: object
+          properties:
+            id:
+              type: integer
+              example: 1
+            username:
+              type: string
+              example: "client1"
+            is_moderator:
+              type: boolean
+              example: false
         message:
           type: string
+          example: "Login successful"
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "client1"
+        is_moderator:
+          type: boolean
+          example: false
+        is_active:
+          type: boolean
+          example: true
+
+    SmartDevice:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "Хаб"
+        model:
+          type: string
+          example: "Яндекс Хаб"
+        avg_data_rate:
+          type: number
+          format: float
+          example: 5120.0
+        data_per_hour:
+          type: number
+          format: float
+          example: 56.25
+        namespace_url:
+          type: string
+          example: "http://localhost:9000/image/hub.png"
+        description:
+          type: string
+          example: "Умный пульт Яндекс Хаб для устройств"
+        description_all:
+          type: string
+          example: "Умный пульт Яндекс Хаб для управления всеми устройствами умного дома..."
+        protocol:
+          type: string
+          example: "Wi-Fi"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T13:08:04Z"
+
+    SmartDeviceCreate:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Хаб"
+        model:
+          type: string
+          example: "Яндекс Хаб"
+        avg_data_rate:
+          type: number
+          format: float
+          example: 5120.0
+        data_per_hour:
+          type: number
+          format: float
+          example: 56.25
+        namespace_url:
+          type: string
+          example: "http://localhost:9000/image/hub.png"
+        description:
+          type: string
+          example: "Умный пульт Яндекс Хаб для устройств"
+        description_all:
+          type: string
+          example: "Умный пульт Яндекс Хаб для управления всеми устройствами умного дома..."
+        protocol:
+          type: string
+          example: "Wi-Fi"
+
+    SmartOrder:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        status:
+          type: string
+          enum: [draft, formed, completed, rejected, deleted]
+          example: "formed"
+        address:
+          type: string
+          example: "ул. Примерная, д. 1, кв. 5"
+        total_traffic:
+          type: number
+          format: float
+          example: 0.55
+        client_id:
+          type: integer
+          example: 1
+        client_name:
+          type: string
+          example: "client1"
+        formed_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T13:13:40Z"
+        completed_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T13:14:20Z"
+        moderator_id:
+          type: integer
+          example: 2
+        moderator_name:
+          type: string
+          example: "moderator1"
+        created_at:
+          type: string
+          format: date-time
+          example: "2025-10-21T13:08:04Z"
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItem'
+
+    OrderItem:
+      type: object
+      properties:
+        device_id:
+          type: integer
+          example: 2
+        device_name:
+          type: string
+          example: "Лампочка"
+        quantity:
+          type: integer
+          example: 3
+        data_per_hour:
+          type: number
+          format: float
+          example: 0.5
+        namespace_url:
+          type: string
+          example: "http://localhost:9000/image/lamp.png"
 
 paths:
+  # Аутентификация
   /auth/login:
     post:
       summary: Аутентификация пользователя
+      description: Вход в систему с получением сессии
       tags: [Auth]
       requestBody:
         required: true
@@ -135,31 +252,315 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoginResponse'
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: "session_id=abc123; Path=/; HttpOnly"
         '401':
           description: Неверные учетные данные
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: Выход из системы
+      description: Завершение сессии пользователя
+      tags: [Auth]
+      security: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logout successful"
+
+  /auth/session:
+    get:
+      summary: Информация о текущей сессии
+      description: Получение данных текущего пользователя
+      tags: [Auth]
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Данные сессии
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/Client'
+        '401':
+          description: Не авторизован
+
+  /auth/sessions:
+    get:
+      summary: Все активные сессии
+      description: Получение списка всех активных сессий (только для модераторов)
+      tags: [Auth]
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Список сессий
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sessions:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/Client'
+        '403':
+          description: Недостаточно прав
+
+  # Умные устройства
+  /smart-devices:
+    get:
+      summary: Получить список умных устройств
+      description: Возвращает список всех активных умных устройств. **Доступно без авторизации**
+      tags: [Devices]
+      parameters:
+        - name: search
+          in: query
+          description: Поиск по названию или описанию
+          required: false
+          schema:
+            type: string
+            example: "лампа"
+        - name: protocol
+          in: query
+          description: Фильтр по протоколу
+          required: false
+          schema:
+            type: string
+            example: "Wi-Fi"
+      responses:
+        '200':
+          description: Список устройств
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SmartDevice'
+
+    post:
+      summary: Создать новое устройство
+      description: Создание нового умного устройства. **Требует прав модератора**
+      tags: [Devices]
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartDeviceCreate'
+      responses:
+        '201':
+          description: Устройство создано
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartDevice'
+        '403':
+          description: Недостаточно прав
+
+  /smart-devices/{id}:
+    get:
+      summary: Получить устройство по ID
+      description: Возвращает детальную информацию об умном устройстве. **Доступно без авторизации**
+      tags: [Devices]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: ID устройства
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Данные устройства
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartDevice'
+        '404':
+          description: Устройство не найдено
+
+    put:
+      summary: Обновить устройство
+      description: Обновление данных умного устройства. **Требует прав модератора**
+      tags: [Devices]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SmartDeviceCreate'
+      responses:
+        '200':
+          description: Устройство обновлено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartDevice'
+        '403':
+          description: Недостаточно прав
+
+    delete:
+      summary: Удалить устройство
+      description: Удаление (деактивация) умного устройства. **Требует прав модератора**
+      tags: [Devices]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Устройство удалено
+        '403':
+          description: Недостаточно прав
+
+  /smart-devices/{id}/image:
+    post:
+      summary: Загрузить изображение устройства
+      description: Загрузка изображения для умного устройства. **Требует прав модератора**
+      tags: [Devices]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                image:
+                  type: string
+                  format: binary
+                  description: Файл изображения
+      responses:
+        '200':
+          description: Изображение загружено
+        '403':
+          description: Недостаточно прав
+
+    delete:
+      summary: Удалить изображение устройства
+      description: Удаление изображения умного устройства. **Требует прав модератора**
+      tags: [Devices]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Изображение удалено
+        '403':
+          description: Недостаточно прав
+
+  # Заявки
+  /smart-orders/cart:
+    get:
+      summary: Получить корзину пользователя
+      description: Получение текущей корзины (черновой заявки) пользователя
+      tags: [Orders]
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Данные корзины
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  order_id:
+                    type: integer
+                    example: 2
+                  count:
+                    type: integer
+                    example: 1
+        '401':
+          description: Требуется авторизация
 
   /smart-orders:
     get:
       summary: Получить список заявок
+      description: |
+        Получение списка заявок. 
+        - **Клиенты** видят только свои заявки
+        - **Модераторы** видят все заявки (кроме черновиков и удаленных)
       tags: [Orders]
       security:
         - sessionCookie: []
       parameters:
         - name: status
           in: query
+          description: Фильтр по статусу
+          required: false
           schema:
             type: string
             enum: [draft, formed, completed, rejected]
+            example: "formed"
         - name: date_from
           in: query
+          description: Дата от (YYYY-MM-DD)
+          required: false
           schema:
             type: string
             format: date
+            example: "2025-10-01"
         - name: date_to
           in: query
+          description: Дата до (YYYY-MM-DD)
+          required: false
           schema:
             type: string
             format: date
+            example: "2025-10-31"
       responses:
         '200':
           description: Список заявок
@@ -170,13 +571,12 @@ paths:
                 items:
                   $ref: '#/components/schemas/SmartOrder'
         '401':
-          description: Требуется аутентификация
-        '403':
-          description: Недостаточно прав
+          description: Требуется авторизация
 
-  /smart-orders/{id}/complete:
-    put:
-      summary: Завершить заявку (только для модераторов)
+  /smart-orders/{id}:
+    get:
+      summary: Получить заявку по ID
+      description: Получение детальной информации о заявке
       tags: [Orders]
       security:
         - sessionCookie: []
@@ -186,6 +586,111 @@ paths:
           required: true
           schema:
             type: integer
+            example: 1
+      responses:
+        '200':
+          description: Данные заявки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartOrder'
+        '403':
+          description: Доступ запрещен
+        '404':
+          description: Заявка не найдена
+
+    put:
+      summary: Обновить заявку
+      description: Обновление данных заявки (адрес)
+      tags: [Orders]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                address:
+                  type: string
+                  example: "ул. Новая, д. 10, кв. 25"
+      responses:
+        '200':
+          description: Заявка обновлена
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartOrder'
+        '403':
+          description: Доступ запрещен
+
+    delete:
+      summary: Удалить заявку
+      description: Удаление заявки (изменение статуса на 'deleted')
+      tags: [Orders]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Заявка удалена
+        '403':
+          description: Доступ запрещен
+
+  /smart-orders/{id}/form:
+    put:
+      summary: Сформировать заявку
+      description: Перевод заявки из статуса 'draft' в 'formed'
+      tags: [Orders]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Заявка сформирована
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SmartOrder'
+        '400':
+          description: Нельзя сформировать заявку
+        '403':
+          description: Доступ запрещен
+
+  /smart-orders/{id}/complete:
+    put:
+      summary: Завершить заявку
+      description: Завершение заявки модератором. **Требует прав модератора**
+      tags: [Orders]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
       responses:
         '200':
           description: Заявка завершена
@@ -194,9 +699,224 @@ paths:
               schema:
                 $ref: '#/components/schemas/SmartOrder'
         '403':
-          description: Требуются права модератора
+          description: Недостаточно прав
+
+  # Элементы заявок
+  /order-items/{deviceId}:
+    put:
+      summary: Изменить количество устройства в заявке
+      description: Изменение количества устройства в текущей корзине пользователя
+      tags: [OrderItems]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quantity:
+                  type: integer
+                  example: 3
+      responses:
+        '200':
+          description: Количество изменено
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  device_id:
+                    type: integer
+                    example: 1
+                  quantity:
+                    type: integer
+                    example: 3
+                  updated:
+                    type: boolean
+                    example: true
         '404':
-          description: Заявка не найдена
+          description: Устройство не найдено в корзине
+
+    delete:
+      summary: Удалить устройство из заявки
+      description: Удаление устройства из текущей корзины пользователя
+      tags: [OrderItems]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '204':
+          description: Устройство удалено
+        '404':
+          description: Устройство не найдено в корзине
+
+  # Клиенты
+  /clients:
+    get:
+      summary: Получить список клиентов
+      description: Получение списка всех клиентов. **Требует прав модератора**
+      tags: [Clients]
+      security:
+        - sessionCookie: []
+      responses:
+        '200':
+          description: Список клиентов
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Client'
+        '403':
+          description: Недостаточно прав
+
+  /clients/{id}:
+    get:
+      summary: Получить клиента по ID
+      description: Получение данных клиента. **Требует прав модератора**
+      tags: [Clients]
+      security:
+        - sessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            example: 1
+      responses:
+        '200':
+          description: Данные клиента
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '403':
+          description: Недостаточно прав
+
+  /clients/register:
+    post:
+      summary: Регистрация клиента
+      description: Создание нового клиента. **Доступно без авторизации**
+      tags: [Clients]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                  example: "newclient"
+                password:
+                  type: string
+                  example: "newpass123"
+      responses:
+        '201':
+          description: Клиент создан
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+
+  /clients/update:
+    put:
+      summary: Обновить данные клиента
+      description: Обновление данных текущего пользователя
+      tags: [Clients]
+      security:
+        - sessionCookie: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                id:
+                  type: integer
+                  example: 1
+                username:
+                  type: string
+                  example: "updated_client"
+                password:
+                  type: string
+                  example: "newpassword"
+      responses:
+        '200':
+          description: Данные обновлены
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Client'
+        '403':
+          description: Доступ запрещен
+
+  /clients/login:
+    post:
+      summary: Аутентификация клиента (legacy)
+      description: Устаревший метод аутентификации. Используйте /auth/login
+      tags: [Clients]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Успешная аутентификация
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  user:
+                    $ref: '#/components/schemas/Client'
+                  message:
+                    type: string
+                    example: "Login successful"
+
+  /clients/logout:
+    post:
+      summary: Выход из системы (legacy)
+      description: Устаревший метод выхода. Используйте /auth/logout
+      tags: [Clients]
+      security: []
+      responses:
+        '200':
+          description: Успешный выход
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logout successful"
 
 tags:
   - name: Auth
@@ -207,3 +927,5 @@ tags:
     description: Управление заявками
   - name: Clients
     description: Управление клиентами
+  - name: OrderItems
+    description: Управление элементами заявок
