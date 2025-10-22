@@ -17,7 +17,7 @@ type MinIOClient struct {
 
 func NewMinIOClient() *MinIOClient {
 	// Создаем клиент MinIO
-	minioClient, err := minio.New("localhost:9000", &minio.Options{
+	minioClient, err := minio.New("minio:9000", &minio.Options{
 		Creds:  credentials.NewStaticV4("myaccesskey123", "mysecretkey123456", ""),
 		Secure: false,
 	})
@@ -26,12 +26,14 @@ func NewMinIOClient() *MinIOClient {
 		return &MinIOClient{}
 	}
 
-	// Проверяем подключение
-	_, err = minioClient.ListBuckets(context.Background())
+	// Проверяем подключение и существование bucket
+	exists, err := minioClient.BucketExists(context.Background(), "image")
 	if err != nil {
 		log.Printf("⚠️ MinIO connection failed: %v", err)
+	} else if exists {
+		log.Printf("✅ MinIO client initialized - bucket 'image' exists")
 	} else {
-		log.Printf("✅ MinIO client initialized successfully")
+		log.Printf("❌ MinIO bucket 'image' not found - please create manually")
 	}
 
 	return &MinIOClient{
@@ -45,22 +47,8 @@ func (m *MinIOClient) UploadFile(filename string, fileData []byte) error {
 		return fmt.Errorf("MinIO client not initialized")
 	}
 
-	// Создаем bucket если не существует
-	exists, err := m.client.BucketExists(context.Background(), m.bucket)
-	if err != nil {
-		return fmt.Errorf("failed to check bucket: %v", err)
-	}
-
-	if !exists {
-		err = m.client.MakeBucket(context.Background(), m.bucket, minio.MakeBucketOptions{})
-		if err != nil {
-			return fmt.Errorf("failed to create bucket: %v", err)
-		}
-		log.Printf("✅ Created bucket: %s", m.bucket)
-	}
-
-	// Загружаем файл
-	_, err = m.client.PutObject(context.Background(), m.bucket, filename,
+	// Просто загружаем файл (bucket должен быть создан заранее)
+	_, err := m.client.PutObject(context.Background(), m.bucket, filename,
 		bytes.NewReader(fileData), int64(len(fileData)),
 		minio.PutObjectOptions{
 			ContentType: "image/png",
