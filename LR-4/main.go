@@ -60,12 +60,16 @@ func main() {
 	http.HandleFunc("/api/auth/session", authMiddleware.GetSessionInfo)
 	http.HandleFunc("/api/auth/sessions", authMiddleware.RequireModerator(authMiddleware.GetAllSessions))
 
+	// НОВЫЕ LUA-ENDPOINTS для отображения пользователей
+	http.HandleFunc("/api/auth/users-info", authMiddleware.RequireModerator(authMiddleware.GetUsersInfo))
+	http.HandleFunc("/api/auth/session-stats", authMiddleware.RequireModerator(authMiddleware.GetSessionStats))
+
 	// API маршруты - Smart Devices
 	http.HandleFunc("/api/smart-devices", func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
-		case "GET":
+		case http.MethodGet:
 			smartDeviceAPI.GetSmartDevices(w, r)
-		case "POST":
+		case http.MethodPost:
 			authMiddleware.RequireModerator(smartDeviceAPI.CreateSmartDevice)(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -78,21 +82,22 @@ func main() {
 
 		switch {
 		case strings.Contains(path, "/image"):
-			if r.Method == "POST" {
+			switch r.Method {
+			case http.MethodPost:
 				authMiddleware.RequireModerator(smartDeviceAPI.UploadDeviceImage)(w, r)
-			} else if r.Method == "DELETE" {
+			case http.MethodDelete:
 				authMiddleware.RequireModerator(smartDeviceAPI.DeleteDeviceImage)(w, r)
-			} else {
+			default:
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		default:
 			// Обычные CRUD операции
 			switch r.Method {
-			case "GET":
+			case http.MethodGet:
 				smartDeviceAPI.GetSmartDevice(w, r)
-			case "PUT":
+			case http.MethodPut:
 				authMiddleware.RequireModerator(smartDeviceAPI.UpdateSmartDevice)(w, r)
-			case "DELETE":
+			case http.MethodDelete:
 				authMiddleware.RequireModerator(smartDeviceAPI.DeleteSmartDevice)(w, r)
 			default:
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -110,13 +115,13 @@ func main() {
 
 		switch {
 		case strings.Contains(path, "/complete"):
-			if r.Method == "PUT" {
+			if r.Method == http.MethodPut {
 				authMiddleware.RequireModerator(smartOrderAPI.CompleteSmartOrder)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		case strings.Contains(path, "/form"):
-			if r.Method == "PUT" {
+			if r.Method == http.MethodPut {
 				authMiddleware.RequireAuth(smartOrderAPI.FormSmartOrder)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -124,11 +129,11 @@ func main() {
 		default:
 			// Обычные CRUD операции
 			switch r.Method {
-			case "GET":
+			case http.MethodGet:
 				authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrder)(w, r)
-			case "PUT":
+			case http.MethodPut:
 				authMiddleware.RequireAuth(smartOrderAPI.UpdateSmartOrder)(w, r)
-			case "DELETE":
+			case http.MethodDelete:
 				authMiddleware.RequireAuth(smartOrderAPI.DeleteSmartOrder)(w, r)
 			default:
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -138,11 +143,12 @@ func main() {
 
 	// API маршруты - Order Items
 	http.HandleFunc("/api/order-items/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "PUT" {
+		switch r.Method {
+		case http.MethodPut:
 			authMiddleware.RequireAuth(orderItemAPI.UpdateOrderItem)(w, r)
-		} else if r.Method == "DELETE" {
+		case http.MethodDelete:
 			authMiddleware.RequireAuth(orderItemAPI.DeleteOrderItem)(w, r)
-		} else {
+		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
 	})
@@ -160,13 +166,15 @@ func main() {
 	log.Println("🔐 Auth system initialized")
 	log.Println("🍪 Session storage: Redis")
 	log.Println("👥 User roles: client/moderator")
-	log.Println("🔗 API доступно (22 метода + auth)")
+	log.Println("🔮 Redis Lua scripts enabled")
 
 	log.Println("🔐 Auth API:")
 	log.Println("   POST   /api/auth/login              - аутентификация")
 	log.Println("   POST   /api/auth/logout             - выход")
 	log.Println("   GET    /api/auth/session            - информация о сессии")
 	log.Println("   GET    /api/auth/sessions           - все сессии (модератор)")
+	log.Println("   GET    /api/auth/users-info         - пользователи через Lua (модератор)")
+	log.Println("   GET    /api/auth/session-stats      - статистика сессий через Lua (модератор)")
 
 	log.Println("📦 Smart Devices API:")
 	log.Println("   GET    /api/smart-devices           - список устройств")
@@ -198,7 +206,7 @@ func main() {
 	log.Println("   POST   /api/clients/login           - аутентификация")
 	log.Println("   POST   /api/clients/logout          - деавторизация")
 
-	log.Println("🎯 Всего методов: 26")
+	log.Println("🎯 Всего методов: 28")
 
 	// ⚠️ ЭТА СТРОЧКА ОБЯЗАТЕЛЬНА! - запускает HTTP сервер
 	http.ListenAndServe(":8080", nil)
