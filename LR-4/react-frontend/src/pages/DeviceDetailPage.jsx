@@ -1,6 +1,7 @@
 import React from 'react';
 import { Container, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
+import Breadcrumbs from '../components/Layout/Breadcrumbs';
 
 function DeviceDetailPage() {
   const { id } = useParams();
@@ -10,8 +11,15 @@ function DeviceDetailPage() {
     navigate('/devices');
   };
 
+  const breadcrumbsItems = [
+    { label: 'Умные устройства', href: '/devices' },
+    { label: `Устройство #${id}`, active: true }
+  ];
+
   return (
     <Container>
+      <Breadcrumbs items={breadcrumbsItems} />
+      
       <Button variant="outline-primary" onClick={handleBackClick} className="mb-3">
         ← Назад к списку устройств
       </Button>

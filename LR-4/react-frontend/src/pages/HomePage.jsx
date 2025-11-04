@@ -1,10 +1,16 @@
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
+import Breadcrumbs from '../components/Layout/Breadcrumbs';
 
 function HomePage() {
+  const breadcrumbsItems = [
+    { label: 'Главная', active: true }
+  ];
+
   return (
     <Container>
-      {/* Заменяем Jumbotron на обычный div с классами Bootstrap */}
+      <Breadcrumbs items={breadcrumbsItems} />
+      
       <div className="bg-light p-5 rounded mb-4">
         <h1 className="display-4">Добро пожаловать в систему Умный Дом</h1>
         <p className="lead">
