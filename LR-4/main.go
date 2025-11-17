@@ -15,7 +15,7 @@ import (
 
 func main() {
 	// Подключение к PostgreSQL через GORM
-	dsn := "host=localhost user=root password=root dbname=RIP port=5432 sslmode=disable"
+	dsn := "host=localhost user=root password=root dbname=RIP port=5433 sslmode=disable"
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		log.Fatal("Ошибка подключения к БД:", err)

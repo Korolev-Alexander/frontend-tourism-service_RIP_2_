@@ -11,7 +11,7 @@ import (
 
 func main() {
 	// Подключение к PostgreSQL
-	dsn := "host=localhost user=root password=root dbname=RIP port=5432 sslmode=disable"
+	dsn := "host=localhost user=root password=root dbname=RIP port=5433 sslmode=disable"
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		log.Fatal("Ошибка подключения к БД:", err)

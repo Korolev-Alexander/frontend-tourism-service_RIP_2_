@@ -20,7 +20,8 @@ function App() {
           <Route path="/" element={<HomePage />} />
           <Route path="/devices" element={<DevicesPage />} />
           <Route path="/devices/:id" element={<DeviceDetailPage />} />
-          <Route path="/orders" element={<div className="mt-4"><h1>Заявки</h1><p>Страница в разработке</p></div>} />
+          {/* УБРАТЬ этот маршрут: */}
+          {/* <Route path="/orders" element={<div className="mt-4"><h1>Заявки</h1><p>Страница в разработке</p></div>} /> */}
         </Routes>
       </Container>
     </Router>

@@ -9,31 +9,22 @@ const AppNavbar: React.FC = () => {
     <Navbar bg="dark" variant="dark" expand="lg">
       <Container>
         <Navbar.Brand as={Link} to="/">
-          Умный Дом
+          🏠 Умный Дом
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="me-auto">
-            <Nav.Link 
-              as={Link} 
-              to="/" 
-              active={location.pathname === '/'}
-            >
+            <Nav.Link as={Link} to="/" active={location.pathname === '/'}>
               Главная
             </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/devices" 
-              active={location.pathname === '/devices'}
-            >
+            <Nav.Link as={Link} to="/devices" active={location.pathname === '/devices'}>
               Устройства
             </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/orders" 
-              active={location.pathname === '/orders'}
-            >
-              Заявки
+          </Nav>
+          <Nav>
+            {/* Просто иконка корзины без ссылки */}
+            <Nav.Link className="fs-4" style={{cursor: 'default'}}>
+              🛒
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>

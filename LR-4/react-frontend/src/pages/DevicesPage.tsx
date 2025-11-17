@@ -1,48 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Form, Button, Spinner, Alert, Card } from 'react-bootstrap';
-import type { SmartDevice, DeviceFilter } from '../types';
-import { api } from '../services/api';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Form, Spinner, Alert } from 'react-bootstrap';
+import type { SmartDevice } from '../types';
 import DeviceList from '../components/Devices/DeviceList';
 
 const DevicesPage: React.FC = () => {
   const [devices, setDevices] = useState<SmartDevice[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filters, setFilters] = useState<DeviceFilter>({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const searchTimeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadDevices();
   }, []);
 
-  const loadDevices = async (filterParams?: DeviceFilter) => {
+  const loadDevices = async (search?: string) => {
     try {
       setLoading(true);
       setError(null);
-      const devicesData = await api.getDevices(filterParams);
+      
+      const queryParams = new URLSearchParams();
+      if (search && search.trim() !== '') {
+        queryParams.append('search', search.trim());
+      }
+
+      const url = `/api/smart-devices?${queryParams.toString()}`;
+      const response = await fetch(url);
+      
+      if (!response.ok) throw new Error('Failed to load devices');
+      
+      const devicesData = await response.json();
       setDevices(devicesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load devices');
+      // Mock данные для демонстрации
+      setDevices(getMockDevices());
     } finally {
       setLoading(false);
     }
   };
 
-  const handleFilterChange = (key: keyof DeviceFilter, value: string) => {
-    const newFilters = { ...filters, [key]: value || undefined };
-    setFilters(newFilters);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+
+    // Очищаем предыдущий таймер
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
+    // Устанавливаем новый таймер (задержка 800ms)
+    searchTimeoutRef.current = window.setTimeout(() => {
+      loadDevices(value);
+    }, 800);
   };
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    loadDevices(filters);
+  const getMockDevices = (): SmartDevice[] => {
+    return [
+      {
+        id: 1,
+        name: 'Умная лампочка',
+        model: 'Яндекс, E27',
+        avg_data_rate: 8,
+        data_per_hour: 0.5,
+        namespace_url: '',
+        description: 'Умная лампочка Яндекс, E27',
+        description_all: 'Умная Яндекс лампочка позволяет дистанционно управлять освещением',
+        protocol: 'Wi-Fi',
+        is_active: true,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 2,
+        name: 'Умная розетка', 
+        model: 'YNDX-00340',
+        avg_data_rate: 2,
+        data_per_hour: 0.1,
+        namespace_url: '',
+        description: 'Умная розетка Яндекс YNDX-00340',
+        description_all: 'Умная розетка для дистанционного управления электроприборами',
+        protocol: 'Wi-Fi',
+        is_active: true,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 3,
+        name: 'Датчик движения',
+        model: 'Aqara Motion Sensor P1',
+        avg_data_rate: 5,
+        data_per_hour: 0.3,
+        namespace_url: '',
+        description: 'Датчик движения Aqara Motion Sensor P1',
+        description_all: 'Беспроводной датчик движения для автоматизации освещения',
+        protocol: 'Zigbee',
+        is_active: true,
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 4,
+        name: 'Умный выключатель',
+        model: 'Яндекс, 2 клавиши',
+        avg_data_rate: 3,
+        data_per_hour: 0.2,
+        namespace_url: '',
+        description: 'Умный беспроводной выключатель Яндекс, 2 клавиши',
+        description_all: 'Беспроводной выключатель для управления умным освещением',
+        protocol: 'Bluetooth',
+        is_active: true,
+        created_at: new Date().toISOString()
+      }
+    ];
   };
 
-  const handleReset = () => {
-    setFilters({});
-    loadDevices({});
-  };
-
-  const protocols = ['Wi-Fi', 'Bluetooth', 'Zigbee'];
+  // Очистка таймера при размонтировании
+  useEffect(() => {
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return (
     <Container className="mt-4">
@@ -50,63 +127,26 @@ const DevicesPage: React.FC = () => {
         <Col>
           <h1 className="mb-4">Умные устройства</h1>
           
-          {/* Фильтры */}
-          <Card className="mb-4">
-            <Card.Body>
-              <Form onSubmit={handleSearch}>
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group>
-                      <Form.Label>Поиск по названию</Form.Label>
-                      <Form.Control
-                        type="text"
-                        placeholder="Введите название устройства..."
-                        value={filters.search || ''}
-                        onChange={(e) => handleFilterChange('search', e.target.value)}
-                      />
-                    </Form.Group>
-                  </Col>
-                  
-                  <Col md={4}>
-                    <Form.Group>
-                      <Form.Label>Протокол</Form.Label>
-                      <Form.Select
-                        value={filters.protocol || ''}
-                        onChange={(e) => handleFilterChange('protocol', e.target.value)}
-                      >
-                        <option value="">Все протоколы</option>
-                        {protocols.map(protocol => (
-                          <option key={protocol} value={protocol}>
-                            {protocol}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </Col>
-                  
-                  <Col md={2} className="d-flex align-items-end">
-                    <div className="d-grid gap-2 w-100">
-                      <Button type="submit" variant="primary">
-                        Применить
-                      </Button>
-                      <Button 
-                        type="button" 
-                        variant="outline-secondary"
-                        onClick={handleReset}
-                      >
-                        Сбросить
-                      </Button>
-                    </div>
-                  </Col>
-                </Row>
-              </Form>
-            </Card.Body>
-          </Card>
+          {/* Поисковая строка */}
+          <div className="mb-4">
+            <Form.Group>
+              <Form.Control
+                type="text"
+                placeholder="Поиск устройств по названию..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                size="lg"
+              />
+              <Form.Text className="text-muted">
+                Начните вводить название устройства - поиск запустится автоматически
+              </Form.Text>
+            </Form.Group>
+          </div>
 
           {/* Результаты */}
           {error && (
-            <Alert variant="danger" className="mb-4">
-              {error}
+            <Alert variant="warning" className="mb-4">
+              {error} (показаны демо-данные)
             </Alert>
           )}
 
