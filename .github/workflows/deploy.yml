@@ -5,30 +5,57 @@ on:
     branches: [ LR-6 ]
   pull_request:
     branches: [ LR-6 ]
+  workflow_dispatch:  # Добавляем возможность ручного запуска
+
+# Даем необходимые permissions
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Разрешаем только один concurrent deployment
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     
     steps:
     - name: Checkout
-      uses: actions/checkout@v3
-
+      uses: actions/checkout@v4
+    
     - name: Setup Node.js
-      uses: actions/setup-node@v3
+      uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
         cache-dependency-path: 'LR-4/react-frontend/package-lock.json'
-
+    
     - name: Install dependencies
-      run: cd LR-4/react-frontend && npm ci
-
+      working-directory: ./LR-4/react-frontend
+      run: npm ci
+    
     - name: Build
-      run: cd LR-4/react-frontend && npm run build
-
-    - name: Deploy to GitHub Pages
-      uses: peaceiris/actions-gh-pages@v3
+      working-directory: ./LR-4/react-frontend
+      run: npm run build
+    
+    - name: Setup Pages
+      uses: actions/configure-pages@v3
+    
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v2
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: ./LR-4/react-frontend/dist
+        path: './LR-4/react-frontend/dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
