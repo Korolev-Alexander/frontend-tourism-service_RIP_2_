@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
 export default defineConfig({
+  base: '/RIP-Part-2/', // ← ДОБАВИТЬ эту строку для GitHub Pages
   plugins: [
     react(),
     VitePWA({
