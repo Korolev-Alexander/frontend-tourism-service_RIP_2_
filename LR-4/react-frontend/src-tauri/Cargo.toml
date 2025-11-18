@@ -1,0 +1,17 @@
+[package]
+name = "smart-devices"
+version = "0.1.0"
+description = "Smart Devices Tauri App"
+authors = ["Korolev-Alexander"]
+edition = "2021"
+rust-version = "1.60"
+
+[dependencies]
+tauri = { version = "1.0", features = ["api-all"] }
+serde_json = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+tokio = { version = "1.0", features = ["full"] }
+
+[build-dependencies]
+tauri-build = { version = "1.0", features = [] }
