@@ -3,17 +3,13 @@ name: Deploy to GitHub Pages
 on:
   push:
     branches: [ LR-6 ]
-  pull_request:
-    branches: [ LR-6 ]
-  workflow_dispatch:  # Добавляем возможность ручного запуска
+  workflow_dispatch:
 
-# Даем необходимые permissions
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Разрешаем только один concurrent deployment
 concurrency:
   group: "pages"
   cancel-in-progress: true
@@ -42,10 +38,10 @@ jobs:
       run: npm run build
     
     - name: Setup Pages
-      uses: actions/configure-pages@v3
+      uses: actions/configure-pages@v4
     
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v2
+      uses: actions/upload-pages-artifact@v3
       with:
         path: './LR-4/react-frontend/dist'
 
@@ -58,4 +54,4 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v2
+        uses: actions/deploy-pages@v4
