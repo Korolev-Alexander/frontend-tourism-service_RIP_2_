@@ -1,18 +1,18 @@
 {
-  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "$schema": "https://schema.tauri.app/config/2.0.0.json",
   "productName": "Smart Devices",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.rip.smartdevices",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:3000",
-    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:8080",
+    "beforeDevCommand": "",
     "beforeBuildCommand": "npm run build"
   },
   "app": {
     "windows": [
       {
-        "title": "Smart Devices ",
+        "title": "Smart Devices",
         "width": 800,
         "height": 600,
         "resizable": true,
@@ -20,7 +20,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' 'unsafe-inline' data: blob: http://localhost:8080 http://192.168.1.100:8080; connect-src 'self' http://localhost:8080 ws://localhost:8080 http://192.168.1.100:8080 ws://192.168.1.100:8080"
     }
   },
   "bundle": {
