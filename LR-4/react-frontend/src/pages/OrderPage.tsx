@@ -87,6 +87,14 @@ const OrderPage: React.FC = () => {
       // Очищаем черновик после успешной отправки
       dispatch(clearDraftOrder());
       
+      // Обновляем список заявок
+      try {
+        const ordersResponse = await api.getOrders();
+        dispatch(loadOrdersSuccess(ordersResponse));
+      } catch (err) {
+        console.error('Ошибка обновления списка заявок:', err);
+      }
+      
       // Перенаправляем на список заявок
       navigate('/orders');
     } catch (err) {

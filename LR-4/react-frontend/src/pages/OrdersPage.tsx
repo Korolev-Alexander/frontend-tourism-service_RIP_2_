@@ -23,6 +23,7 @@ const OrdersPage: React.FC = () => {
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Ошибка загрузки заявок';
         dispatch(loadOrdersFailure(errorMessage));
+        console.error('Ошибка загрузки заявок:', err);
       }
     };
 
