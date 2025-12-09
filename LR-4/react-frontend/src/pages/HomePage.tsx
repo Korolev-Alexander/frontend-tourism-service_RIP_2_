@@ -43,8 +43,7 @@ const HomePage: React.FC = () => {
             <Card.Body className="text-center">
               <Card.Title>⚡ Быстрый старт</Card.Title>
               <Card.Text>
-                Легко находите нужные устройства, добавляйте в корзину 
-                и формируйте заявки в несколько кликов.
+                Легко находите нужные устройства и формируйте заявки в несколько кликов.
               </Card.Text>
             </Card.Body>
           </Card>

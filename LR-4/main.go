@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"strings"
@@ -33,39 +34,39 @@ func main() {
 	orderItemAPI := apiHandlers.NewOrderItemAPIHandler(db)
 	clientAPI := apiHandlers.NewClientAPIHandler(db)
 
-	// Статические файлы
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	// Статические файлы с применением middleware
+	http.Handle("/static/", middleware.LoggingMiddleware(http.StripPrefix("/static/", http.FileServer(http.Dir("static"))).ServeHTTP))
 
-	// Главная страница - сразу показываем устройства
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+	// Применяем middleware ко всем маршрутам
+	http.HandleFunc("/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/" {
 			handlers.SmartDevicesHandler(w, r)
 			return
 		}
 		handlers.Show404Page(w, "Страница не найдена")
-	})
+	}))
 
-	// HTML маршруты
-	http.HandleFunc("/smart-devices", handlers.SmartDevicesHandler)
-	http.HandleFunc("/smart-devices/", handlers.SmartDeviceDetailHandler)
-	http.HandleFunc("/smart-cart", handlers.SmartCartHandler)
-	http.HandleFunc("/smart-cart/add", handlers.AddToSmartCartHandler)
-	http.HandleFunc("/smart-cart/delete", handlers.DeleteSmartCartHandler)
-	http.HandleFunc("/smart-cart/count", handlers.GetSmartCartCountHandler)
-	http.HandleFunc("/request/", handlers.RequestByIDHandler)
+	// HTML маршруты с применением middleware
+	http.HandleFunc("/smart-devices", middleware.LoggingMiddleware(handlers.SmartDevicesHandler))
+	http.HandleFunc("/smart-devices/", middleware.LoggingMiddleware(handlers.SmartDeviceDetailHandler))
+	http.HandleFunc("/smart-cart", middleware.LoggingMiddleware(handlers.SmartCartHandler))
+	http.HandleFunc("/smart-cart/add", middleware.LoggingMiddleware(handlers.AddToSmartCartHandler))
+	http.HandleFunc("/smart-cart/delete", middleware.LoggingMiddleware(handlers.DeleteSmartCartHandler))
+	http.HandleFunc("/smart-cart/count", middleware.LoggingMiddleware(handlers.GetSmartCartCountHandler))
+	http.HandleFunc("/request/", middleware.LoggingMiddleware(handlers.RequestByIDHandler))
 
-	// API маршруты аутентификации
-	http.HandleFunc("/api/auth/login", authMiddleware.Login)
-	http.HandleFunc("/api/auth/logout", authMiddleware.Logout)
-	http.HandleFunc("/api/auth/session", authMiddleware.GetSessionInfo)
-	http.HandleFunc("/api/auth/sessions", authMiddleware.RequireModerator(authMiddleware.GetAllSessions))
+	// API маршруты аутентификации с применением middleware
+	http.HandleFunc("/api/auth/login", middleware.LoggingMiddleware(middleware.ValidationMiddleware(authMiddleware.Login)))
+	http.HandleFunc("/api/auth/logout", middleware.LoggingMiddleware(authMiddleware.Logout))
+	http.HandleFunc("/api/auth/session", middleware.LoggingMiddleware(authMiddleware.GetSessionInfo))
+	http.HandleFunc("/api/auth/sessions", middleware.LoggingMiddleware(authMiddleware.RequireModerator(authMiddleware.GetAllSessions)))
 
 	// НОВЫЕ LUA-ENDPOINTS для отображения пользователей
 	http.HandleFunc("/api/auth/users-info", authMiddleware.RequireModerator(authMiddleware.GetUsersInfo))
 	http.HandleFunc("/api/auth/session-stats", authMiddleware.RequireModerator(authMiddleware.GetSessionStats))
 
-	// API маршруты - Smart Devices
-	http.HandleFunc("/api/smart-devices", func(w http.ResponseWriter, r *http.Request) {
+	// API маршруты - Smart Devices с применением middleware
+	http.HandleFunc("/api/smart-devices", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			smartDeviceAPI.GetSmartDevices(w, r)
@@ -74,10 +75,10 @@ func main() {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
-	// Обработка всех /api/smart-devices/... маршрутов
-	http.HandleFunc("/api/smart-devices/", func(w http.ResponseWriter, r *http.Request) {
+	// Обработка всех /api/smart-devices/... маршрутов с применением middleware
+	http.HandleFunc("/api/smart-devices/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		switch {
@@ -96,21 +97,21 @@ func main() {
 			case http.MethodGet:
 				smartDeviceAPI.GetSmartDevice(w, r)
 			case http.MethodPut:
-				authMiddleware.RequireModerator(smartDeviceAPI.UpdateSmartDevice)(w, r)
+				middleware.ValidationMiddleware(authMiddleware.RequireModerator(smartDeviceAPI.UpdateSmartDevice))(w, r)
 			case http.MethodDelete:
 				authMiddleware.RequireModerator(smartDeviceAPI.DeleteSmartDevice)(w, r)
 			default:
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		}
-	})
+	}))
 
-	// API маршруты - Smart Orders
-	http.HandleFunc("/api/smart-orders/cart", authMiddleware.RequireAuth(smartOrderAPI.GetCart))
-	http.HandleFunc("/api/smart-orders", authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrders))
+	// API маршруты - Smart Orders с применением middleware
+	http.HandleFunc("/api/smart-orders/cart", middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetCart)))
+	http.HandleFunc("/api/smart-orders", middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrders)))
 
-	// Обработка всех /api/smart-orders/... маршрутов
-	http.HandleFunc("/api/smart-orders/", func(w http.ResponseWriter, r *http.Request) {
+	// Обработка всех /api/smart-orders/... маршрутов с применением middleware
+	http.HandleFunc("/api/smart-orders/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		switch {
@@ -132,36 +133,36 @@ func main() {
 			case http.MethodGet:
 				authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrder)(w, r)
 			case http.MethodPut:
-				authMiddleware.RequireAuth(smartOrderAPI.UpdateSmartOrder)(w, r)
+				middleware.ValidationMiddleware(authMiddleware.RequireAuth(smartOrderAPI.UpdateSmartOrder))(w, r)
 			case http.MethodDelete:
 				authMiddleware.RequireAuth(smartOrderAPI.DeleteSmartOrder)(w, r)
 			default:
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		}
-	})
+	}))
 
-	// API маршруты - Order Items
-	http.HandleFunc("/api/order-items/", func(w http.ResponseWriter, r *http.Request) {
+	// API маршруты - Order Items с применением middleware
+	http.HandleFunc("/api/order-items/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
-			authMiddleware.RequireAuth(orderItemAPI.UpdateOrderItem)(w, r)
+			middleware.ValidationMiddleware(authMiddleware.RequireAuth(orderItemAPI.UpdateOrderItem))(w, r)
 		case http.MethodDelete:
 			authMiddleware.RequireAuth(orderItemAPI.DeleteOrderItem)(w, r)
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	})
+	}))
 
-	// API маршруты - Clients
-	http.HandleFunc("/api/clients/login", clientAPI.Login)
-	http.HandleFunc("/api/clients/logout", clientAPI.Logout)
-	http.HandleFunc("/api/clients/register", clientAPI.CreateClient)
-	http.HandleFunc("/api/clients/update", authMiddleware.RequireAuth(clientAPI.UpdateClient))
-	http.HandleFunc("/api/clients/", authMiddleware.RequireModerator(clientAPI.GetClient))
-	http.HandleFunc("/api/clients", authMiddleware.RequireModerator(clientAPI.GetClients))
+	// API маршруты - Clients с применением middleware
+	http.HandleFunc("/api/clients/login", middleware.LoggingMiddleware(clientAPI.Login))
+	http.HandleFunc("/api/clients/logout", middleware.LoggingMiddleware(clientAPI.Logout))
+	http.HandleFunc("/api/clients/register", middleware.LoggingMiddleware(middleware.ValidationMiddleware(clientAPI.CreateClient)))
+	http.HandleFunc("/api/clients/update", middleware.LoggingMiddleware(authMiddleware.RequireAuth(clientAPI.UpdateClient)))
+	http.HandleFunc("/api/clients/", middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClient)))
+	http.HandleFunc("/api/clients", middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClients)))
 
-	log.Println("🚀 Сервер запущен на http://localhost:8080")
+	log.Println("🚀 Сервер запущен на http://192.168.1.12:8082")
 	log.Println("📱 HTML интерфейс доступен")
 	log.Println("🔐 Auth system initialized")
 	log.Println("🍪 Session storage: Redis")
@@ -209,5 +210,8 @@ func main() {
 	log.Println("🎯 Всего методов: 28")
 
 	// ⚠️ ЭТА СТРОЧКА ОБЯЗАТЕЛЬНА! - запускает HTTP сервер
-	http.ListenAndServe(":8080", nil)
+	fmt.Println("Сервер ожидает подключения на порту 8082...")
+	if err := http.ListenAndServe("0.0.0.0:8082", nil); err != nil {
+		log.Fatal("Ошибка запуска сервера:", err)
+	}
 }

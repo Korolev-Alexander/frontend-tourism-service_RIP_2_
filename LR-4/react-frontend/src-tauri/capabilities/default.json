@@ -6,6 +6,18 @@
     "main"
   ],
   "permissions": [
-    "core:default"
+    "core:default",
+    {
+      "identifier": "http:default",
+      "allow": [
+        { "url": "http://192.168.1.12:8080" },
+        { "url": "http://localhost:8080" },
+        { "url": "http://109.252.222.30:8080" }
+      ],
+      "deny": []
+    },
+    "http:allow-fetch",
+    "http:allow-fetch-read-body",
+    "http:allow-fetch-send"
   ]
 }

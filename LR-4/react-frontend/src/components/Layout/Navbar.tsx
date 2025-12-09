@@ -30,10 +30,6 @@ const AppNavbar: React.FC = () => {
             </Nav.Link>
           </Nav>
           <Nav>
-            {/* Иконка корзины */}
-            <Nav.Link className="fs-4" style={{cursor: 'default'}}>
-              🛒
-            </Nav.Link>
           </Nav>
         </Navbar.Collapse>
       </Container>

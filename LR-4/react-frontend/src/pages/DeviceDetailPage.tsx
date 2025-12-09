@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Container, Row, Col, Card, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
 import type { SmartDevice } from '../types';
 import { api } from '../services/api';
 
@@ -91,6 +91,12 @@ const DeviceDetailPage: React.FC = () => {
               <div>
                 <h5>Описание</h5>
                 <p>{device.description_all}</p>
+              </div>
+              
+              <div className="mt-3">
+                <Button variant="primary">
+                  Добавить в корзину
+                </Button>
               </div>
             </Card.Body>
           </Card>
