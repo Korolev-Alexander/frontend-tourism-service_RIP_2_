@@ -29,8 +29,7 @@ const AddToOrderButton: React.FC<AddToOrderButtonProps> = ({ device }) => {
       // Обновляем информацию о корзине
       await dispatch(fetchDraftOrder()).unwrap();
       
-      // Переходим на страницу корзины
-      navigate('/order');
+      // Пользователь остаётся на текущей странице для продолжения выбора товаров
     } catch (error) {
       console.error('Ошибка при добавлении устройства:', error);
     }

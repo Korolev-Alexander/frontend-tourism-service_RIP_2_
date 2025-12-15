@@ -6,6 +6,9 @@ import { fetchUserOrders, removeDeviceFromOrder, updateDeviceQuantity, submitDra
 import type { RootState } from '../store/index';
 import type { SmartOrder, OrderItem as ApiOrderItem } from '../api/Api';
 
+// Ключ для хранения адреса черновой заявки в localStorage
+const DRAFT_ADDRESS_KEY = 'draft_order_address';
+
 const OrderPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const navigate = useNavigate();
@@ -46,12 +49,21 @@ const OrderPage: React.FC = () => {
       });
       setQuantities(initialQuantities);
       
-      // Устанавливаем адрес из заявки
-      if (order.address) {
-        setAddress(order.address);
-      }
+      // Инициализация адреса с приоритетом: сервер > localStorage > пустая строка
+      const serverAddress = order.address || '';
+      const localAddress = localStorage.getItem(DRAFT_ADDRESS_KEY) || '';
+      setAddress(serverAddress || localAddress);
     }
   }, [order]);
+
+  // Обработчик изменения адреса с сохранением в localStorage
+  const handleAddressChange = (newAddress: string) => {
+    setAddress(newAddress);
+    // Сохраняем в localStorage только для черновых заявок
+    if (isDraft) {
+      localStorage.setItem(DRAFT_ADDRESS_KEY, newAddress);
+    }
+  };
 
   const handleRemoveDevice = async (deviceId: number) => {
     try {
@@ -90,6 +102,8 @@ const OrderPage: React.FC = () => {
 
     try {
       await dispatch(submitDraftOrder({ orderId: order.id, address })).unwrap();
+      // Очищаем localStorage после успешного оформления заявки
+      localStorage.removeItem(DRAFT_ADDRESS_KEY);
       alert('Заявка успешно оформлена!');
       navigate('/orders');
     } catch (error: any) {
@@ -289,7 +303,7 @@ const OrderPage: React.FC = () => {
                 type="text"
                 placeholder="Введите адрес доставки"
                 value={address}
-                onChange={(e) => setAddress(e.target.value)}
+                onChange={(e) => handleAddressChange(e.target.value)}
                 required
               />
             </Form.Group>

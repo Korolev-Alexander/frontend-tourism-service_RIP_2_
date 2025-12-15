@@ -170,7 +170,6 @@ const DevicesPage: React.FC = () => {
                 {totalItems}
               </Badge>
             )}
-            <span className="ms-2">Моя заявка</span>
           </Button>
         </Col>
       </Row>
