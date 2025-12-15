@@ -43,8 +43,9 @@ type SmartOrder struct {
 	ModeratorID *uint      `json:"moderator_id,omitempty"`
 	Moderator   Client     `gorm:"foreignKey:ModeratorID;constraint:OnDelete:RESTRICT" json:"moderator,omitempty"`
 
-	Address      string  `gorm:"size:500" json:"address"`
-	TotalTraffic float64 `json:"total_traffic"`
+	Address           string  `gorm:"size:500" json:"address"`
+	TotalTraffic      float64 `json:"total_traffic"`
+	TrafficCalculated bool    `gorm:"default:false" json:"traffic_calculated"`
 }
 
 // OrderItem (table: order_items) - устройства в заявке

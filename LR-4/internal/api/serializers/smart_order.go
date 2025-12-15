@@ -6,18 +6,19 @@ import (
 )
 
 type SmartOrderResponse struct {
-	ID            uint                     `json:"id"`
-	Status        string                   `json:"status"`
-	Address       string                   `json:"address"`
-	TotalTraffic  float64                  `json:"total_traffic"`
-	ClientID      uint                     `json:"client_id"`
-	ClientName    string                   `json:"client_name"`
-	FormedAt      *time.Time               `json:"formed_at,omitempty"`
-	CompletedAt   *time.Time               `json:"completed_at,omitempty"`
-	ModeratorID   *uint                    `json:"moderator_id,omitempty"`
-	ModeratorName string                   `json:"moderator_name,omitempty"`
-	CreatedAt     time.Time                `json:"created_at"`
-	Items         []SmartOrderItemResponse `json:"items"`
+	ID                uint                     `json:"id"`
+	Status            string                   `json:"status"`
+	Address           string                   `json:"address"`
+	TotalTraffic      float64                  `json:"total_traffic"`
+	TrafficCalculated bool                     `json:"traffic_calculated"`
+	ClientID          uint                     `json:"client_id"`
+	ClientName        string                   `json:"client_name"`
+	FormedAt          *time.Time               `json:"formed_at,omitempty"`
+	CompletedAt       *time.Time               `json:"completed_at,omitempty"`
+	ModeratorID       *uint                    `json:"moderator_id,omitempty"`
+	ModeratorName     string                   `json:"moderator_name,omitempty"`
+	CreatedAt         time.Time                `json:"created_at"`
+	Items             []SmartOrderItemResponse `json:"items"`
 }
 
 type SmartOrderItemResponse struct {
@@ -40,17 +41,18 @@ type SmartOrderFilter struct {
 
 func SmartOrderToJSON(order models.SmartOrder, items []SmartOrderItemResponse) SmartOrderResponse {
 	response := SmartOrderResponse{
-		ID:           order.ID,
-		Status:       order.Status,
-		Address:      order.Address,
-		TotalTraffic: order.TotalTraffic,
-		ClientID:     order.ClientID,
-		ClientName:   order.Client.Username,
-		FormedAt:     order.FormedAt,
-		CompletedAt:  order.CompletedAt,
-		ModeratorID:  order.ModeratorID,
-		CreatedAt:    order.CreatedAt,
-		Items:        items,
+		ID:                order.ID,
+		Status:            order.Status,
+		Address:           order.Address,
+		TotalTraffic:      order.TotalTraffic,
+		TrafficCalculated: order.TrafficCalculated,
+		ClientID:          order.ClientID,
+		ClientName:        order.Client.Username,
+		FormedAt:          order.FormedAt,
+		CompletedAt:       order.CompletedAt,
+		ModeratorID:       order.ModeratorID,
+		CreatedAt:         order.CreatedAt,
+		Items:             items,
 	}
 
 	if order.ModeratorID != nil && order.Moderator.ID != 0 {

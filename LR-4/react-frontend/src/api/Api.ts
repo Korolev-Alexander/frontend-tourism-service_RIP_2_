@@ -121,6 +121,8 @@ export interface SmartOrder {
    * @example 0.55
    */
   total_traffic?: number;
+  /** @example false */
+  traffic_calculated?: boolean;
   /** @example 1 */
   client_id?: number;
   /** @example "client1" */

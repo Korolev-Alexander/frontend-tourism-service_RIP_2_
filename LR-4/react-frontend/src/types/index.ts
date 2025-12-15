@@ -25,8 +25,16 @@ export interface OrderItem {
 export interface Order {
   id: number;
   items: OrderItem[];
-  status: 'draft' | 'submitted' | 'confirmed' | 'shipped' | 'delivered';
-  totalAmount: number;
+  status: 'draft' | 'formed' | 'completed' | 'deleted';
+  address: string;
+  total_traffic: number;
+  traffic_calculated: boolean;
+  client_id: number;
+  client_name: string;
+  formed_at?: string;
+  completed_at?: string;
+  moderator_id?: number;
+  moderator_name?: string;
   createdAt: string;
 }
 

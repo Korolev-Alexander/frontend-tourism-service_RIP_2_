@@ -114,6 +114,15 @@ func main() {
 	http.HandleFunc("/api/smart-orders/cart", corsWrapper(authMiddleware.RequireAuth(smartOrderAPI.GetCart)))
 	http.HandleFunc("/api/smart-orders", corsWrapper(authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrders)))
 
+	// API маршрут для приема результатов от асинхронного сервиса
+	http.HandleFunc("/api/traffic_result", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodPut {
+			smartOrderAPI.ReceiveTrafficResult(w, r)
+		} else {
+			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		}
+	}))
+
 	// Обработка всех /api/smart-orders/... маршрутов
 	http.HandleFunc("/api/smart-orders/", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
@@ -128,6 +137,12 @@ func main() {
 		case strings.Contains(path, "/form"):
 			if r.Method == http.MethodPut {
 				authMiddleware.RequireAuth(smartOrderAPI.FormSmartOrder)(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
+		case strings.Contains(path, "/calculate-traffic"):
+			if r.Method == http.MethodPut {
+				authMiddleware.RequireAuth(smartOrderAPI.CalculateTrafficAsync)(w, r)
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}

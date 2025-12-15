@@ -47,9 +47,18 @@ const initialState: OrderState = {
 // Async Thunk функции
 export const fetchUserOrders = createAsyncThunk(
   'order/fetchUserOrders',
-  async (_, { rejectWithValue }) => {
+  async (filters: { status?: string; dateFrom?: string; dateTo?: string } | undefined, { rejectWithValue }) => {
     try {
-      const response = await api.smartOrders.smartOrdersList();
+      const params = new URLSearchParams();
+      if (filters?.status) params.append('status', filters.status);
+      if (filters?.dateFrom) params.append('date_from', filters.dateFrom);
+      if (filters?.dateTo) params.append('date_to', filters.dateTo);
+      
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+      const response = await axios.get(
+        `${baseURL}/smart-orders?${params.toString()}`,
+        { withCredentials: true }
+      );
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка при загрузке заявок');
@@ -175,6 +184,42 @@ export const submitDraftOrder = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка при оформлении заявки');
+    }
+  }
+);
+
+// Завершение заявки модератором
+export const completeOrder = createAsyncThunk(
+  'order/completeOrder',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+      const response = await axios.put(
+        `${baseURL}/smart-orders/${orderId}/complete`,
+        {},
+        { withCredentials: true }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при завершении заявки');
+    }
+  }
+);
+
+// Запуск асинхронного расчета трафика
+export const calculateTraffic = createAsyncThunk(
+  'order/calculateTraffic',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+      const response = await axios.put(
+        `${baseURL}/smart-orders/${orderId}/calculate-traffic`,
+        {},
+        { withCredentials: true }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при запуске расчета трафика');
     }
   }
 );
@@ -363,6 +408,36 @@ export const orderSlice = createSlice({
         state.id = null;
       })
       .addCase(submitDraftOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // completeOrder
+      .addCase(completeOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(completeOrder.fulfilled, (state, action: PayloadAction<SmartOrder>) => {
+        state.loading = false;
+        // Обновляем заявку в списке
+        const index = state.userOrders.findIndex(order => order.id === action.payload.id);
+        if (index !== -1) {
+          state.userOrders[index] = action.payload;
+        }
+      })
+      .addCase(completeOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // calculateTraffic
+      .addCase(calculateTraffic.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(calculateTraffic.fulfilled, (state) => {
+        state.loading = false;
+        // Расчет запущен, результаты придут асинхронно
+      })
+      .addCase(calculateTraffic.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       });

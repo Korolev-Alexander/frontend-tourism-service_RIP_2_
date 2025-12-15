@@ -1,7 +1,10 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -12,6 +15,11 @@ import (
 	"smartdevices/internal/models"
 
 	"gorm.io/gorm"
+)
+
+const (
+	ASYNC_SERVICE_URL = "http://localhost:3000/api/traffic_calculation_async"
+	SECRET_TOKEN      = "MY_SECRET_TOKEN_2025"
 )
 
 type SmartOrderAPIHandler struct {
@@ -366,6 +374,121 @@ func (h *SmartOrderAPIHandler) DeleteSmartOrder(w http.ResponseWriter, r *http.R
 	h.db.Save(&order)
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// PUT /api/traffic_result - прием результатов от асинхронного сервиса
+func (h *SmartOrderAPIHandler) ReceiveTrafficResult(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Token        string  `json:"token"`
+		OrderID      uint    `json:"order_id"`
+		TotalTraffic float64 `json:"total_traffic"`
+	}
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// Проверка токена
+	if req.Token != SECRET_TOKEN {
+		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		return
+	}
+
+	// Обновляем заявку
+	var order models.SmartOrder
+	result := h.db.First(&order, req.OrderID)
+	if result.Error != nil {
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	order.TotalTraffic = req.TotalTraffic
+	order.TrafficCalculated = true
+	h.db.Save(&order)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+}
+
+// PUT /api/smart-orders/{id}/calculate-traffic - запуск асинхронного расчета трафика
+func (h *SmartOrderAPIHandler) CalculateTrafficAsync(w http.ResponseWriter, r *http.Request) {
+	// Получаем текущего пользователя (уже проверен через middleware)
+	currentUser := h.authMiddleware.GetCurrentUser(r)
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/smart-orders/")
+	idStr = strings.TrimSuffix(idStr, "/calculate-traffic")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid order ID", http.StatusBadRequest)
+		return
+	}
+
+	var order models.SmartOrder
+	result := h.db.First(&order, id)
+	if result.Error != nil {
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	// Проверяем права доступа
+	if !currentUser.IsModerator && order.ClientID != currentUser.ClientID {
+		http.Error(w, "Access denied", http.StatusForbidden)
+		return
+	}
+
+	// Получаем устройства заявки
+	var items []models.OrderItem
+	h.db.Preload("Device").Where("order_id = ?", order.ID).Find(&items)
+
+	// Формируем данные для асинхронного сервиса
+	type DeviceItem struct {
+		DeviceID    uint    `json:"device_id"`
+		DeviceName  string  `json:"device_name"`
+		Quantity    int     `json:"quantity"`
+		DataPerHour float64 `json:"data_per_hour"`
+	}
+
+	var devices []DeviceItem
+	for _, item := range items {
+		devices = append(devices, DeviceItem{
+			DeviceID:    item.DeviceID,
+			DeviceName:  item.Device.Name,
+			Quantity:    item.Quantity,
+			DataPerHour: item.Device.DataPerHour,
+		})
+	}
+
+	requestData := map[string]interface{}{
+		"order_id": order.ID,
+		"devices":  devices,
+	}
+
+	jsonData, err := json.Marshal(requestData)
+	if err != nil {
+		http.Error(w, "Failed to prepare request", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем запрос к асинхронному сервису
+	resp, err := http.Post(ASYNC_SERVICE_URL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Printf("Failed to call async service: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to call async service: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Async service returned error", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "ok",
+		"message": "Traffic calculation started",
+	})
 }
 
 // Вспомогательная функция
