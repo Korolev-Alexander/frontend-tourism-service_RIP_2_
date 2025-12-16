@@ -15,6 +15,11 @@ const AddToOrderButton: React.FC<AddToOrderButtonProps> = ({ device }) => {
   const orderState = useAppSelector((state) => state.order);
   const user = useAppSelector((state) => state.user);
 
+  // Если пользователь модератор - не показываем кнопку
+  if (user.isModerator) {
+    return null;
+  }
+
   const handleAddToOrder = async () => {
     if (!user.isAuthenticated) {
       // Если пользователь не авторизован, перенаправляем на страницу входа

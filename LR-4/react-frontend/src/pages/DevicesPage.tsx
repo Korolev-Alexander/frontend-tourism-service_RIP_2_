@@ -153,25 +153,27 @@ const DevicesPage: React.FC = () => {
         <Col>
           <h1 className="mb-0">Умные устройства</h1>
         </Col>
-        <Col xs="auto">
-          <Button 
-            variant="primary" 
-            onClick={handleCartClick}
-            className="position-relative"
-            size="lg"
-          >
-            <span className="fs-4">🛒</span>
-            {user.isAuthenticated && totalItems > 0 && (
-              <Badge 
-                bg="danger" 
-                pill 
-                className="position-absolute top-0 start-100 translate-middle"
-              >
-                {totalItems}
-              </Badge>
-            )}
-          </Button>
-        </Col>
+        {user.isAuthenticated && !user.isModerator && (
+          <Col xs="auto">
+            <Button 
+              variant="primary" 
+              onClick={handleCartClick}
+              className="position-relative"
+              size="lg"
+            >
+              <span className="fs-4">🛒</span>
+              {totalItems > 0 && (
+                <Badge 
+                  bg="danger" 
+                  pill 
+                  className="position-absolute top-0 start-100 translate-middle"
+                >
+                  {totalItems}
+                </Badge>
+              )}
+            </Button>
+          </Col>
+        )}
       </Row>
       
       <Row>

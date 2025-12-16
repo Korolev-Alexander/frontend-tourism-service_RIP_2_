@@ -33,6 +33,13 @@ func (h *OrderItemAPIHandler) AddOrderItem(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	// Проверяем: модератор не может создавать заявки
+	if currentUser.IsModerator {
+		log.Printf("❌ Модератор (ID: %d) попытался добавить устройство в корзину", currentUser.ClientID)
+		http.Error(w, `{"error": "Модераторы не могут создавать заявки"}`, http.StatusForbidden)
+		return
+	}
+
 	var request struct {
 		DeviceID int `json:"device_id"`
 		Quantity int `json:"quantity"`
@@ -114,6 +121,13 @@ func (h *OrderItemAPIHandler) UpdateOrderItem(w http.ResponseWriter, r *http.Req
 		return
 	}
 
+	// Проверяем: модератор не может изменять заявки
+	if currentUser.IsModerator {
+		log.Printf("❌ Модератор (ID: %d) попытался изменить количество устройства в корзине", currentUser.ClientID)
+		http.Error(w, `{"error": "Модераторы не могут изменять заявки"}`, http.StatusForbidden)
+		return
+	}
+
 	idStr := r.URL.Path[len("/api/order-items/"):]
 	deviceID, err := strconv.Atoi(idStr)
 	if err != nil {
@@ -168,6 +182,13 @@ func (h *OrderItemAPIHandler) DeleteOrderItem(w http.ResponseWriter, r *http.Req
 	currentUser := h.authMiddleware.GetCurrentUser(r)
 	if currentUser == nil {
 		http.Error(w, `{"error": "Authentication required"}`, http.StatusUnauthorized)
+		return
+	}
+
+	// Проверяем: модератор не может удалять устройства из заявок
+	if currentUser.IsModerator {
+		log.Printf("❌ Модератор (ID: %d) попытался удалить устройство из корзины", currentUser.ClientID)
+		http.Error(w, `{"error": "Модераторы не могут изменять заявки"}`, http.StatusForbidden)
 		return
 	}
 
