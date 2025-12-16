@@ -43,11 +43,15 @@ const OrderPage: React.FC = () => {
   useEffect(() => {
     // Инициализируем количества из заявки
     if (order && order.items) {
-      const initialQuantities: { [key: number]: number } = {};
-      order.items.forEach((item: ApiOrderItem) => {
-        initialQuantities[item.device_id!] = item.quantity || 1;
-      });
-      setQuantities(initialQuantities);
+      // Обновляем только если локальное состояние пустое или это первая загрузка
+      // Это предотвращает перезапись локальных изменений данными с сервера
+      if (Object.keys(quantities).length === 0) {
+        const initialQuantities: { [key: number]: number } = {};
+        order.items.forEach((item: ApiOrderItem) => {
+          initialQuantities[item.device_id!] = item.quantity || 1;
+        });
+        setQuantities(initialQuantities);
+      }
       
       // Инициализация адреса с приоритетом: сервер > localStorage > пустая строка
       const serverAddress = order.address || '';
@@ -68,24 +72,33 @@ const OrderPage: React.FC = () => {
   const handleRemoveDevice = async (deviceId: number) => {
     try {
       await dispatch(removeDeviceFromOrder(deviceId)).unwrap();
-      // Перезагружаем заявки
+      // Перезагружаем заявки после удаления
       await dispatch(fetchUserOrders()).unwrap();
     } catch (error) {
       console.error('Ошибка при удалении устройства:', error);
+      alert('Ошибка при удалении устройства: ' + error);
     }
   };
 
   const handleQuantityChange = async (deviceId: number, newQuantity: number) => {
     if (newQuantity < 1) return;
     
+    // Сохраняем предыдущее значение для возможного отката
+    const previousQuantity = quantities[deviceId] || 1;
+    
+    // Оптимистичное обновление - сразу показываем изменение пользователю
     setQuantities(prev => ({ ...prev, [deviceId]: newQuantity }));
     
     try {
+      // Отправляем изменение на сервер в фоновом режиме
       await dispatch(updateDeviceQuantity({ deviceId, quantity: newQuantity })).unwrap();
-      // Перезагружаем заявки
-      await dispatch(fetchUserOrders()).unwrap();
+      // НЕ перезагружаем все заявки - данные уже обновлены локально!
+      // Это устраняет race condition и делает UI более отзывчивым
     } catch (error) {
+      // При ошибке откатываем изменение
       console.error('Ошибка при обновлении количества:', error);
+      setQuantities(prev => ({ ...prev, [deviceId]: previousQuantity }));
+      alert('Ошибка при обновлении количества: ' + error);
     }
   };
 
