@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Table, Button, Alert, Spinner, Card, Form, Row, Col } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { fetchUserOrders, completeOrder, rejectOrder, calculateTraffic } from '../store/slices/orderSlice';
+import { fetchUserOrders, completeOrder, rejectOrder } from '../store/slices/orderSlice';
 import type { RootState } from '../store/index';
 import type { SmartOrder } from '../api/Api';
 
@@ -119,6 +119,7 @@ const OrdersPage: React.FC = () => {
   const handleCompleteOrder = async (orderId: number) => {
     try {
       await dispatch(completeOrder(orderId)).unwrap();
+      alert('Расчет запущен! Заявка будет автоматически одобрена через 5-10 секунд.');
       // Обновляем список заявок
       if (user?.isModerator) {
         dispatch(fetchUserOrders({
@@ -130,8 +131,8 @@ const OrdersPage: React.FC = () => {
         dispatch(fetchUserOrders(undefined));
       }
     } catch (error: any) {
-      console.error('Ошибка завершения заявки:', error);
-      alert('Ошибка при завершении заявки: ' + error);
+      console.error('Ошибка одобрения заявки:', error);
+      alert('Ошибка при одобрении заявки: ' + error);
     }
   };
 
@@ -154,15 +155,6 @@ const OrdersPage: React.FC = () => {
     }
   };
 
-  const handleCalculateTraffic = async (orderId: number) => {
-    try {
-      await dispatch(calculateTraffic(orderId)).unwrap();
-      alert('Расчет трафика запущен! Результаты появятся через 5-10 секунд.');
-    } catch (error: any) {
-      console.error('Ошибка запуска расчета трафика:', error);
-      alert('Ошибка при запуске расчета: ' + error);
-    }
-  };
 
   return (
     <Container className="mt-4">
@@ -305,7 +297,7 @@ const OrdersPage: React.FC = () => {
                               size="sm"
                               onClick={() => handleCompleteOrder(order.id!)}
                             >
-                              Завершить
+                              Одобрить
                             </Button>
                             <Button
                               variant="danger"
@@ -313,14 +305,6 @@ const OrdersPage: React.FC = () => {
                               onClick={() => handleRejectOrder(order.id!)}
                             >
                               Отклонить
-                            </Button>
-                            <Button
-                              variant="info"
-                              size="sm"
-                              onClick={() => handleCalculateTraffic(order.id!)}
-                              disabled={order.traffic_calculated}
-                            >
-                              Расчет
                             </Button>
                           </>
                         )}

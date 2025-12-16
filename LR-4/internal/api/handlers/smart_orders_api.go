@@ -315,7 +315,7 @@ func (h *SmartOrderAPIHandler) RejectSmartOrder(w http.ResponseWriter, r *http.R
 	json.NewEncoder(w).Encode(response)
 }
 
-// PUT /api/smart-orders/{id}/complete - завершение заявки
+// PUT /api/smart-orders/{id}/complete - завершение заявки (запуск асинхронного расчета)
 func (h *SmartOrderAPIHandler) CompleteSmartOrder(w http.ResponseWriter, r *http.Request) {
 	// Проверяем права модератора (уже проверен через middleware)
 	currentUser := h.authMiddleware.GetCurrentUser(r)
@@ -341,60 +341,63 @@ func (h *SmartOrderAPIHandler) CompleteSmartOrder(w http.ResponseWriter, r *http
 		return
 	}
 
-	// Расчет общего трафика по формуле из лабы 2
+	// Устанавливаем модератора сразу, чтобы было понятно кто запустил одобрение
+	order.ModeratorID = uintPtr(currentUser.ClientID)
+	h.db.Save(&order)
+
+	// Получаем устройства заявки для асинхронного расчета
 	var items []models.OrderItem
 	h.db.Preload("Device").Where("order_id = ?", order.ID).Find(&items)
 
-	totalTraffic := 0.0
-	for _, item := range items {
-		baseTraffic := item.Device.DataPerHour * float64(item.Quantity)
-
-		// Формула расчета с коэффициентами для разных типов устройств
-		var coefficient float64
-		switch {
-		case strings.Contains(item.Device.Name, "Хаб"):
-			coefficient = 1.3 // Хабы требуют больше трафика
-		case strings.Contains(item.Device.Name, "Датчик"):
-			coefficient = 0.7 // Датчики экономят трафик
-		case strings.Contains(item.Device.Name, "Лампочка"):
-			coefficient = 1.1 // Лампочки немного больше
-		case strings.Contains(item.Device.Name, "Розетка"):
-			coefficient = 0.9 // Розетки мало трафика
-		case strings.Contains(item.Device.Name, "Выключатель"):
-			coefficient = 0.8 // Выключатели мало трафика
-		default:
-			coefficient = 1.0
-		}
-
-		traffic := baseTraffic * coefficient
-		totalTraffic += traffic
+	// Формируем данные для асинхронного сервиса
+	type DeviceItem struct {
+		DeviceID    uint    `json:"device_id"`
+		DeviceName  string  `json:"device_name"`
+		Quantity    int     `json:"quantity"`
+		DataPerHour float64 `json:"data_per_hour"`
 	}
 
-	// Установка статуса, модератора и даты завершения
-	now := time.Now()
-	order.Status = "completed"
-	order.CompletedAt = &now
-	order.ModeratorID = uintPtr(currentUser.ClientID)
-	order.TotalTraffic = totalTraffic
-
-	h.db.Save(&order)
-
-	// Загружаем items для ответа
-	var itemResponses []serializers.SmartOrderItemResponse
+	var devices []DeviceItem
 	for _, item := range items {
-		itemResponses = append(itemResponses, serializers.SmartOrderItemResponse{
-			DeviceID:     item.DeviceID,
-			DeviceName:   item.Device.Name,
-			Quantity:     item.Quantity,
-			DataPerHour:  item.Device.DataPerHour,
-			NamespaceURL: item.Device.NamespaceURL,
+		devices = append(devices, DeviceItem{
+			DeviceID:    item.DeviceID,
+			DeviceName:  item.Device.Name,
+			Quantity:    item.Quantity,
+			DataPerHour: item.Device.DataPerHour,
 		})
 	}
 
-	response := serializers.SmartOrderToJSON(order, itemResponses)
+	requestData := map[string]interface{}{
+		"order_id": order.ID,
+		"devices":  devices,
+	}
 
+	jsonData, err := json.Marshal(requestData)
+	if err != nil {
+		http.Error(w, "Failed to prepare request", http.StatusInternalServerError)
+		return
+	}
+
+	// Отправляем запрос к асинхронному сервису
+	resp, err := http.Post(ASYNC_SERVICE_URL, "application/json", bytes.NewBuffer(jsonData))
+	if err != nil {
+		log.Printf("Failed to call async service: %v", err)
+		http.Error(w, fmt.Sprintf("Failed to call async service: %v", err), http.StatusInternalServerError)
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		http.Error(w, "Async service returned error", http.StatusInternalServerError)
+		return
+	}
+
+	// Возвращаем успешный ответ
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(response)
+	json.NewEncoder(w).Encode(map[string]string{
+		"status":  "ok",
+		"message": "Расчет запущен, заявка будет автоматически одобрена через 5-10 секунд",
+	})
 }
 
 // DELETE /api/smart-orders/{id} - удаление заявки
@@ -456,9 +459,18 @@ func (h *SmartOrderAPIHandler) ReceiveTrafficResult(w http.ResponseWriter, r *ht
 		return
 	}
 
+	// Обновляем трафик и устанавливаем флаг расчета
 	order.TotalTraffic = req.TotalTraffic
 	order.TrafficCalculated = true
+
+	// Автоматически завершаем заявку после получения результата расчета
+	now := time.Now()
+	order.Status = "completed"
+	order.CompletedAt = &now
+
 	h.db.Save(&order)
+
+	log.Printf("✅ Order #%d completed with traffic: %.2f MB/month", order.ID, order.TotalTraffic)
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
