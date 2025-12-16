@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Container, Table, Button, Alert, Spinner, Card, Form, Row, Col } from 'react-bootstrap';
+import { Container, Button, Alert, Spinner, Card, Form, Row, Col } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
 import { fetchUserOrders, completeOrder, rejectOrder } from '../store/slices/orderSlice';
 import type { RootState } from '../store/index';
 import type { SmartOrder } from '../api/Api';
+import OrderCard from '../components/Orders/OrderCard';
 
 const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -78,42 +79,6 @@ const OrdersPage: React.FC = () => {
 
   const handleViewOrder = (orderId: number) => {
     navigate(`/orders/${orderId}`);
-  };
-
-  // Функция для отображения статуса заявки на русском языке
-  const getOrderStatusText = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'Черновик';
-      case 'formed':
-        return 'Сформирована';
-      case 'completed':
-        return 'Завершена';
-      case 'rejected':
-        return 'Отклонена';
-      case 'deleted':
-        return 'Удалена';
-      default:
-        return status;
-    }
-  };
-
-  // Функция для получения класса статуса для стилизации
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'warning';
-      case 'formed':
-        return 'info';
-      case 'completed':
-        return 'success';
-      case 'rejected':
-        return 'danger';
-      case 'deleted':
-        return 'secondary';
-      default:
-        return 'secondary';
-    }
   };
 
   const handleCompleteOrder = async (orderId: number) => {
@@ -248,72 +213,18 @@ const OrdersPage: React.FC = () => {
               </Card.Body>
             </Card>
           ) : (
-            <Table striped bordered hover responsive>
-              <thead>
-                <tr>
-                  <th>Номер заявки</th>
-                  {user?.isModerator && <th>Клиент</th>}
-                  <th>Дата создания</th>
-                  <th>Адрес</th>
-                  <th>Трафик (МБ/мес)</th>
-                  <th>Рассчитан</th>
-                  <th>Статус</th>
-                  <th>Действия</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredOrders.map((order: SmartOrder, index: number) => (
-                  <tr key={`order-${order.id}-${index}`}>
-                    <td>{order.id}</td>
-                    {user?.isModerator && <td>{order.client_name}</td>}
-                    <td>{new Date(order.created_at || '').toLocaleDateString('ru-RU')}</td>
-                    <td>{order.address}</td>
-                    <td>{order.total_traffic?.toFixed(2) || '0.00'}</td>
-                    <td>
-                      {order.traffic_calculated ? (
-                        <span className="badge bg-success">Да</span>
-                      ) : (
-                        <span className="badge bg-secondary">Нет</span>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`badge bg-${getStatusClass(order.status || '')}`}>
-                        {getOrderStatusText(order.status || '')}
-                      </span>
-                    </td>
-                    <td>
-                      <div className="d-flex gap-1">
-                        <Button
-                          variant="outline-primary"
-                          size="sm"
-                          onClick={() => handleViewOrder(order.id!)}
-                        >
-                          Просмотр
-                        </Button>
-                        {user?.isModerator && order.status === 'formed' && (
-                          <>
-                            <Button
-                              variant="success"
-                              size="sm"
-                              onClick={() => handleCompleteOrder(order.id!)}
-                            >
-                              Одобрить
-                            </Button>
-                            <Button
-                              variant="danger"
-                              size="sm"
-                              onClick={() => handleRejectOrder(order.id!)}
-                            >
-                              Отклонить
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </Table>
+            <div>
+              {filteredOrders.map((order: SmartOrder, index: number) => (
+                <OrderCard
+                  key={`order-${order.id}-${index}`}
+                  order={order}
+                  isModerator={user?.isModerator || false}
+                  onViewOrder={handleViewOrder}
+                  onCompleteOrder={handleCompleteOrder}
+                  onRejectOrder={handleRejectOrder}
+                />
+              ))}
+            </div>
           )}
         </>
       )}

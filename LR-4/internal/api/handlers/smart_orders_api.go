@@ -93,13 +93,13 @@ func (h *SmartOrderAPIHandler) GetSmartOrders(w http.ResponseWriter, r *http.Req
 
 	if dateFromStr != "" {
 		if dateFrom, err := time.Parse("2006-01-02", dateFromStr); err == nil {
-			query = query.Where("formed_at >= ?", dateFrom)
+			query = query.Where("created_at >= ?", dateFrom)
 		}
 	}
 
 	if dateToStr != "" {
 		if dateTo, err := time.Parse("2006-01-02", dateToStr); err == nil {
-			query = query.Where("formed_at <= ?", dateTo.AddDate(0, 0, 1))
+			query = query.Where("created_at <= ?", dateTo.AddDate(0, 0, 1))
 		}
 	}
 

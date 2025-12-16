@@ -64,3 +64,17 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* Стили для карточек заявок */
+.order-card {
+  transition: box-shadow 0.2s;
+  border-left: 4px solid transparent;
+}
+
+.order-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.order-card .card-body {
+  padding: 1.25rem;
+}
