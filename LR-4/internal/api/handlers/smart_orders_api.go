@@ -18,7 +18,7 @@ import (
 )
 
 const (
-	ASYNC_SERVICE_URL = "http://localhost:3000/api/traffic_calculation_async"
+	ASYNC_SERVICE_URL = "http://localhost:8000/api/traffic_calculation_async"
 	SECRET_TOKEN      = "MY_SECRET_TOKEN_2025"
 )
 
@@ -260,6 +260,59 @@ func (h *SmartOrderAPIHandler) FormSmartOrder(w http.ResponseWriter, r *http.Req
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(serializers.SmartOrderToJSON(order, nil))
+}
+
+// PUT /api/smart-orders/{id}/reject - отклонение заявки модератором
+func (h *SmartOrderAPIHandler) RejectSmartOrder(w http.ResponseWriter, r *http.Request) {
+	// Проверяем права модератора (уже проверен через middleware)
+	currentUser := h.authMiddleware.GetCurrentUser(r)
+
+	idStr := strings.TrimPrefix(r.URL.Path, "/api/smart-orders/")
+	idStr = strings.TrimSuffix(idStr, "/reject")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		http.Error(w, "Invalid order ID", http.StatusBadRequest)
+		return
+	}
+
+	var order models.SmartOrder
+	result := h.db.Preload("Client").First(&order, id)
+	if result.Error != nil {
+		http.Error(w, "Order not found", http.StatusNotFound)
+		return
+	}
+
+	// Проверяем что заявка сформирована
+	if order.Status != "formed" {
+		http.Error(w, "Only formed orders can be rejected", http.StatusBadRequest)
+		return
+	}
+
+	// Установка статуса и модератора
+	order.Status = "rejected"
+	order.ModeratorID = uintPtr(currentUser.ClientID)
+
+	h.db.Save(&order)
+
+	// Загружаем items для ответа
+	var items []models.OrderItem
+	h.db.Preload("Device").Where("order_id = ?", order.ID).Find(&items)
+
+	var itemResponses []serializers.SmartOrderItemResponse
+	for _, item := range items {
+		itemResponses = append(itemResponses, serializers.SmartOrderItemResponse{
+			DeviceID:     item.DeviceID,
+			DeviceName:   item.Device.Name,
+			Quantity:     item.Quantity,
+			DataPerHour:  item.Device.DataPerHour,
+			NamespaceURL: item.Device.NamespaceURL,
+		})
+	}
+
+	response := serializers.SmartOrderToJSON(order, itemResponses)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }
 
 // PUT /api/smart-orders/{id}/complete - завершение заявки

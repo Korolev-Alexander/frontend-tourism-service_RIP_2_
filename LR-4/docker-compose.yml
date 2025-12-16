@@ -48,6 +48,10 @@ services:
     volumes:
       - redis-data:/data
 
+networks:
+  default:
+    driver: bridge
+
 volumes:
   postgresdb-data:
   minio-data:

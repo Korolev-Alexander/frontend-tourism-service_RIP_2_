@@ -134,6 +134,12 @@ func main() {
 			} else {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
+		case strings.Contains(path, "/reject"):
+			if r.Method == http.MethodPut {
+				authMiddleware.RequireModerator(smartOrderAPI.RejectSmartOrder)(w, r)
+			} else {
+				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+			}
 		case strings.Contains(path, "/form"):
 			if r.Method == http.MethodPut {
 				authMiddleware.RequireAuth(smartOrderAPI.FormSmartOrder)(w, r)

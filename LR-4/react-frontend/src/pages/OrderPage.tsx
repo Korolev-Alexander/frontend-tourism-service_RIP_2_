@@ -230,8 +230,8 @@ const OrderPage: React.FC = () => {
         </Card.Header>
         <ListGroup variant="flush">
           {order.items && order.items.length > 0 ? (
-            order.items.map((item: ApiOrderItem) => (
-              <ListGroup.Item key={item.device_id}>
+            order.items.map((item: ApiOrderItem, index: number) => (
+              <ListGroup.Item key={`${order.id}-${item.device_id}-${index}`}>
                 <div className="d-flex justify-content-between align-items-center">
                   <div className="flex-grow-1">
                     <h6 className="mb-1">{item.device_name}</h6>
@@ -252,17 +252,24 @@ const OrderPage: React.FC = () => {
                             -
                           </Button>
                           <Form.Control
-                            type="number"
+                            type="text"
                             size="sm"
                             value={quantities[item.device_id!] || 1}
                             onChange={(e) => {
-                              const val = parseInt(e.target.value);
-                              if (!isNaN(val) && val > 0) {
-                                handleQuantityChange(item.device_id!, val);
+                              const inputValue = e.target.value;
+                              // Разрешаем только цифры
+                              if (/^\d*$/.test(inputValue)) {
+                                const val = parseInt(inputValue);
+                                if (!isNaN(val) && val > 0) {
+                                  handleQuantityChange(item.device_id!, val);
+                                } else if (inputValue === '') {
+                                  // Если поле очищено, не вызываем API
+                                  setQuantities(prev => ({ ...prev, [item.device_id!]: 1 }));
+                                }
                               }
                             }}
-                            min="1"
                             className="text-center"
+                            style={{ MozAppearance: 'textfield' }}
                           />
                           <Button
                             variant="outline-secondary"

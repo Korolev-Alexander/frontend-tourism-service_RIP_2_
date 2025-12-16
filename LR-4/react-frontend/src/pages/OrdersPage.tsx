@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Table, Button, Alert, Spinner, Card, Form, Row, Col } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
-import { fetchUserOrders, completeOrder, calculateTraffic } from '../store/slices/orderSlice';
+import { fetchUserOrders, completeOrder, rejectOrder, calculateTraffic } from '../store/slices/orderSlice';
 import type { RootState } from '../store/index';
 import type { SmartOrder } from '../api/Api';
 
@@ -135,6 +135,25 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  const handleRejectOrder = async (orderId: number) => {
+    try {
+      await dispatch(rejectOrder(orderId)).unwrap();
+      // Обновляем список заявок
+      if (user?.isModerator) {
+        dispatch(fetchUserOrders({
+          status: statusFilter || undefined,
+          dateFrom: dateFromFilter || undefined,
+          dateTo: dateToFilter || undefined
+        }));
+      } else {
+        dispatch(fetchUserOrders(undefined));
+      }
+    } catch (error: any) {
+      console.error('Ошибка отклонения заявки:', error);
+      alert('Ошибка при отклонении заявки: ' + error);
+    }
+  };
+
   const handleCalculateTraffic = async (orderId: number) => {
     try {
       await dispatch(calculateTraffic(orderId)).unwrap();
@@ -165,6 +184,7 @@ const OrdersPage: React.FC = () => {
                     <option value="">Все</option>
                     <option value="formed">Сформирована</option>
                     <option value="completed">Завершена</option>
+                    <option value="rejected">Отклонена</option>
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -250,8 +270,8 @@ const OrdersPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.map((order: SmartOrder) => (
-                  <tr key={order.id}>
+                {filteredOrders.map((order: SmartOrder, index: number) => (
+                  <tr key={`order-${order.id}-${index}`}>
                     <td>{order.id}</td>
                     {user?.isModerator && <td>{order.client_name}</td>}
                     <td>{new Date(order.created_at || '').toLocaleDateString('ru-RU')}</td>
@@ -286,6 +306,13 @@ const OrdersPage: React.FC = () => {
                               onClick={() => handleCompleteOrder(order.id!)}
                             >
                               Завершить
+                            </Button>
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              onClick={() => handleRejectOrder(order.id!)}
+                            >
+                              Отклонить
                             </Button>
                             <Button
                               variant="info"

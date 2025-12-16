@@ -206,6 +206,24 @@ export const completeOrder = createAsyncThunk(
   }
 );
 
+// Отклонение заявки модератором
+export const rejectOrder = createAsyncThunk(
+  'order/rejectOrder',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+      const response = await axios.put(
+        `${baseURL}/smart-orders/${orderId}/reject`,
+        {},
+        { withCredentials: true }
+      );
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при отклонении заявки');
+    }
+  }
+);
+
 // Запуск асинхронного расчета трафика
 export const calculateTraffic = createAsyncThunk(
   'order/calculateTraffic',
@@ -425,6 +443,23 @@ export const orderSlice = createSlice({
         }
       })
       .addCase(completeOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload as string;
+      })
+      // rejectOrder
+      .addCase(rejectOrder.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(rejectOrder.fulfilled, (state, action: PayloadAction<SmartOrder>) => {
+        state.loading = false;
+        // Обновляем заявку в списке
+        const index = state.userOrders.findIndex(order => order.id === action.payload.id);
+        if (index !== -1) {
+          state.userOrders[index] = action.payload;
+        }
+      })
+      .addCase(rejectOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
       })

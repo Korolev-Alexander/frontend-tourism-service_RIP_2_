@@ -773,6 +773,50 @@ export class Api<
         format: "json",
         ...params,
       }),
+
+    /**
+     * @description Отклонение заявки модератором. **Требует прав модератора**
+     *
+     * @tags Orders
+     * @name RejectUpdate
+     * @summary Отклонить заявку
+     * @request PUT:/smart-orders/{id}/reject
+     * @secure
+     */
+    rejectUpdate: (id: number, params: RequestParams = {}) =>
+      this.request<SmartOrder, void>({
+        path: `/smart-orders/${id}/reject`,
+        method: "PUT",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description Запуск асинхронного расчета трафика для заявки
+     *
+     * @tags Orders
+     * @name CalculateTrafficUpdate
+     * @summary Рассчитать трафик асинхронно
+     * @request PUT:/smart-orders/{id}/calculate-traffic
+     * @secure
+     */
+    calculateTrafficUpdate: (id: number, params: RequestParams = {}) =>
+      this.request<
+        {
+          /** @example "ok" */
+          status?: string;
+          /** @example "Traffic calculation started" */
+          message?: string;
+        },
+        void
+      >({
+        path: `/smart-orders/${id}/calculate-traffic`,
+        method: "PUT",
+        secure: true,
+        format: "json",
+        ...params,
+      }),
   };
   orderItems = {
     /**

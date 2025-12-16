@@ -11,6 +11,7 @@ interface UserState {
   username: string | null;
   email: string | null;
   isAuthenticated: boolean;
+  isModerator: boolean;
   token: string | null;
 }
 
