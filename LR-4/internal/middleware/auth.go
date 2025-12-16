@@ -181,7 +181,12 @@ func (a *AuthMiddleware) GetSessionInfo(w http.ResponseWriter, r *http.Request) 
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"user": session,
+		"user": map[string]interface{}{
+			"id":           session.ClientID,
+			"client_id":    session.ClientID,
+			"username":     session.Username,
+			"is_moderator": session.IsModerator,
+		},
 	})
 }
 

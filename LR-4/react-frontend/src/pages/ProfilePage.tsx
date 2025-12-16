@@ -106,7 +106,12 @@ const ProfilePage: React.FC = () => {
         username: username
       };
       
-      // Добавляем пароль, если он был изменен
+      // Добавляем текущий пароль, если он указан
+      if (currentPassword) {
+        updateData.current_password = currentPassword;
+      }
+      
+      // Добавляем новый пароль, если он был изменен
       if (newPassword) {
         updateData.password = newPassword;
       }

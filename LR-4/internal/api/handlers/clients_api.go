@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -103,9 +104,10 @@ func (h *ClientAPIHandler) UpdateClient(w http.ResponseWriter, r *http.Request) 
 	}
 
 	var req struct {
-		ID       uint   `json:"id"`
-		Username string `json:"username"`
-		Password string `json:"password"`
+		ID              uint   `json:"id"`
+		Username        string `json:"username"`
+		Password        string `json:"password"`
+		CurrentPassword string `json:"current_password"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -113,8 +115,16 @@ func (h *ClientAPIHandler) UpdateClient(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// ЛОГИРОВАНИЕ ДЛЯ ОТЛАДКИ
+	log.Printf("🔍 UpdateClient DEBUG:")
+	log.Printf("   currentUser.ClientID = %d (type: %T)", currentUser.ClientID, currentUser.ClientID)
+	log.Printf("   req.ID = %d (type: %T)", req.ID, req.ID)
+	log.Printf("   currentUser.IsModerator = %v", currentUser.IsModerator)
+	log.Printf("   Comparison result: %v", currentUser.ClientID != req.ID)
+
 	// Проверяем что пользователь обновляет свои данные
 	if currentUser.ClientID != req.ID && !currentUser.IsModerator {
+		log.Printf("❌ Access denied: ClientID mismatch")
 		http.Error(w, "Access denied", http.StatusForbidden)
 		return
 	}
@@ -126,6 +136,19 @@ func (h *ClientAPIHandler) UpdateClient(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
+	// Проверяем текущий пароль перед изменением данных
+	if req.CurrentPassword != "" {
+		if client.Password != req.CurrentPassword {
+			http.Error(w, "Invalid current password", http.StatusUnauthorized)
+			return
+		}
+	} else if req.Password != "" {
+		// Если пытаются изменить пароль без указания текущего
+		http.Error(w, "Current password required to change password", http.StatusBadRequest)
+		return
+	}
+
+	// Обновляем данные
 	client.Username = req.Username
 	if req.Password != "" {
 		client.Password = req.Password
