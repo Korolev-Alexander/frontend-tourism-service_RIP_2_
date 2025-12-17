@@ -17,6 +17,16 @@ const OrderCard: React.FC<OrderCardProps> = ({
   onCompleteOrder,
   onRejectOrder,
 }) => {
+  // Отладочный вывод дат заявки
+  React.useEffect(() => {
+    console.log(`[OrderCard] Заявка #${order.id}:`, {
+      status: order.status,
+      created_at: order.created_at,
+      formed_at: order.formed_at,
+      completed_at: order.completed_at,
+    });
+  }, [order]);
+
   // Функция для отображения статуса заявки на русском языке
   const getOrderStatusText = (status: string) => {
     switch (status) {
@@ -66,7 +76,18 @@ const OrderCard: React.FC<OrderCardProps> = ({
             </div>
             
             <div className="text-muted small mb-2">
-              <strong>Создано:</strong> {new Date(order.created_at || '').toLocaleDateString('ru-RU')}
+              {isModerator ? (
+                <>
+                  <strong>Дата формирования:</strong>{' '}
+                  {order.formed_at 
+                    ? new Date(order.formed_at).toLocaleDateString('ru-RU')
+                    : 'Не сформирована'}
+                </>
+              ) : (
+                <>
+                  <strong>Создано:</strong> {new Date(order.created_at || '').toLocaleDateString('ru-RU')}
+                </>
+              )}
             </div>
             
             {isModerator && order.client_name && (

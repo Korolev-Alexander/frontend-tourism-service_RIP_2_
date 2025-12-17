@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Alert, Spinner, Card, Form, Row, Col } from 'react-bootstrap';
 import { useAppSelector, useAppDispatch } from '../store/hooks';
@@ -6,6 +6,7 @@ import { fetchUserOrders, completeOrder, rejectOrder } from '../store/slices/ord
 import type { RootState } from '../store/index';
 import type { SmartOrder } from '../api/Api';
 import OrderCard from '../components/Orders/OrderCard';
+import { useDebounce } from '../hooks/useDebounce';
 
 const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
@@ -19,6 +20,14 @@ const OrdersPage: React.FC = () => {
   const [dateToFilter, setDateToFilter] = useState<string>('');
   const [clientFilter, setClientFilter] = useState<string>('');
 
+  // Debounced версии для полей дат (задержка 500мс)
+  const debouncedDateFrom = useDebounce(dateFromFilter, 500);
+  const debouncedDateTo = useDebounce(dateToFilter, 500);
+
+  // Ref для отслеживания первого рендера
+  const isFirstRender = useRef(true);
+
+  // Основной useEffect для загрузки заявок с debounced фильтрами
   useEffect(() => {
     // Проверяем авторизацию пользователя
     if (!user || !user.isAuthenticated) {
@@ -26,44 +35,77 @@ const OrdersPage: React.FC = () => {
       return;
     }
 
-    // Загружаем заявки пользователя только если пользователь авторизован
-    if (user.isAuthenticated) {
-      // Для модератора применяем фильтры
-      if (user.isModerator) {
-        dispatch(fetchUserOrders({
-          status: statusFilter || undefined,
-          dateFrom: dateFromFilter || undefined,
-          dateTo: dateToFilter || undefined
-        }));
-      } else {
-        dispatch(fetchUserOrders(undefined));
-      }
+    // Пропускаем первый рендер для избежания двойного запроса
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
     }
-  }, [dispatch, user, navigate, statusFilter, dateFromFilter, dateToFilter]);
 
-  // Short polling - обновление каждые 3 секунды
+    // Загружаем заявки с применением фильтров
+    if (user.isModerator) {
+      const filters = {
+        status: statusFilter || undefined,
+        dateFrom: debouncedDateFrom || undefined,
+        dateTo: debouncedDateTo || undefined
+      };
+      console.log('[OrdersPage] 🔍 Отправка запроса с фильтрами:', filters);
+      dispatch(fetchUserOrders(filters));
+    } else {
+      console.log('[OrdersPage] 📋 Загрузка заявок пользователя');
+      dispatch(fetchUserOrders(undefined));
+    }
+  }, [dispatch, user, navigate, statusFilter, debouncedDateFrom, debouncedDateTo]);
+
+  // Short polling - обновление каждые 3 секунды с актуальными фильтрами
   useEffect(() => {
     if (!user?.isAuthenticated) return;
 
+    // Первоначальная загрузка
+    if (user.isModerator) {
+      const filters = {
+        status: statusFilter || undefined,
+        dateFrom: debouncedDateFrom || undefined,
+        dateTo: debouncedDateTo || undefined
+      };
+      console.log('[OrdersPage] 🚀 Первоначальная загрузка с фильтрами:', filters);
+      dispatch(fetchUserOrders(filters));
+    } else {
+      console.log('[OrdersPage] 🚀 Первоначальная загрузка заявок пользователя');
+      dispatch(fetchUserOrders(undefined));
+    }
+
+    // Устанавливаем интервал для polling
     const interval = setInterval(() => {
-      // Для модератора применяем фильтры при обновлении
       if (user.isModerator) {
-        dispatch(fetchUserOrders({
+        const filters = {
           status: statusFilter || undefined,
-          dateFrom: dateFromFilter || undefined,
-          dateTo: dateToFilter || undefined
-        }));
+          dateFrom: debouncedDateFrom || undefined,
+          dateTo: debouncedDateTo || undefined
+        };
+        console.log('[OrdersPage] 🔄 Polling с фильтрами:', filters);
+        dispatch(fetchUserOrders(filters));
       } else {
+        console.log('[OrdersPage] 🔄 Polling заявок пользователя');
         dispatch(fetchUserOrders(undefined));
       }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [dispatch, user?.isAuthenticated, user?.isModerator, statusFilter, dateFromFilter, dateToFilter]);
+  }, [dispatch, user?.isAuthenticated, user?.isModerator, statusFilter, debouncedDateFrom, debouncedDateTo]);
 
   // Фильтрация заявок на фронтенде (по создателю для модератора)
   const filteredOrders = useMemo(() => {
     if (!userOrders) return [];
+
+    console.log('[OrdersPage] 📊 Заявок с бэкенда:', userOrders.length);
+    if (userOrders.length > 0) {
+      console.log('[OrdersPage] 📋 Первая заявка:', {
+        id: userOrders[0].id,
+        status: userOrders[0].status,
+        formed_at: userOrders[0].formed_at,
+        client_name: userOrders[0].client_name
+      });
+    }
 
     let filtered = [...userOrders];
 
@@ -72,10 +114,14 @@ const OrdersPage: React.FC = () => {
       filtered = filtered.filter(order => 
         order.client_name?.toLowerCase().includes(clientFilter.toLowerCase())
       );
+      console.log('[OrdersPage] ✅ После фильтра по клиенту:', filtered.length);
     }
 
     return filtered;
   }, [userOrders, clientFilter, user?.isModerator]);
+
+  // Проверяем, активны ли фильтры
+  const hasActiveFilters = statusFilter || dateFromFilter || dateToFilter || clientFilter;
 
   const handleViewOrder = (orderId: number) => {
     navigate(`/orders/${orderId}`);
@@ -85,12 +131,12 @@ const OrdersPage: React.FC = () => {
     try {
       await dispatch(completeOrder(orderId)).unwrap();
       alert('Расчет запущен! Заявка будет автоматически одобрена через 5-10 секунд.');
-      // Обновляем список заявок
+      // Обновляем список заявок с актуальными фильтрами
       if (user?.isModerator) {
         dispatch(fetchUserOrders({
           status: statusFilter || undefined,
-          dateFrom: dateFromFilter || undefined,
-          dateTo: dateToFilter || undefined
+          dateFrom: debouncedDateFrom || undefined,
+          dateTo: debouncedDateTo || undefined
         }));
       } else {
         dispatch(fetchUserOrders(undefined));
@@ -104,12 +150,12 @@ const OrdersPage: React.FC = () => {
   const handleRejectOrder = async (orderId: number) => {
     try {
       await dispatch(rejectOrder(orderId)).unwrap();
-      // Обновляем список заявок
+      // Обновляем список заявок с актуальными фильтрами
       if (user?.isModerator) {
         dispatch(fetchUserOrders({
           status: statusFilter || undefined,
-          dateFrom: dateFromFilter || undefined,
-          dateTo: dateToFilter || undefined
+          dateFrom: debouncedDateFrom || undefined,
+          dateTo: debouncedDateTo || undefined
         }));
       } else {
         dispatch(fetchUserOrders(undefined));
@@ -195,21 +241,27 @@ const OrdersPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {!userOrders || userOrders.length === 0 ? (
+          {filteredOrders.length === 0 ? (
             <Card>
               <Card.Body>
                 <Card.Text className="text-center">
-                  У вас пока нет заявок. Перейдите в каталог устройств, чтобы создать новую заявку.
+                  {hasActiveFilters ? (
+                    <>Нет заявок, удовлетворяющих условиям поиска.</>
+                  ) : (
+                    <>У вас пока нет заявок. Перейдите в каталог устройств, чтобы создать новую заявку.</>
+                  )}
                 </Card.Text>
-                <div className="text-center">
-                  <Button
-                    variant="primary"
-                    onClick={() => navigate('/devices')}
-                    className="mt-2"
-                  >
-                    Перейти к устройствам
-                  </Button>
-                </div>
+                {!hasActiveFilters && (
+                  <div className="text-center">
+                    <Button
+                      variant="primary"
+                      onClick={() => navigate('/devices')}
+                      className="mt-2"
+                    >
+                      Перейти к устройствам
+                    </Button>
+                  </div>
+                )}
               </Card.Body>
             </Card>
           ) : (

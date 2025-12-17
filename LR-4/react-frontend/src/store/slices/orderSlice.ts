@@ -55,10 +55,11 @@ export const fetchUserOrders = createAsyncThunk(
       if (filters?.dateTo) params.append('date_to', filters.dateTo);
       
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
-      const response = await axios.get(
-        `${baseURL}/smart-orders?${params.toString()}`,
-        { withCredentials: true }
-      );
+      const url = `${baseURL}/smart-orders?${params.toString()}`;
+      console.log('[fetchUserOrders] URL запроса:', url);
+      console.log('[fetchUserOrders] Параметры:', { filters, params: params.toString() });
+      
+      const response = await axios.get(url, { withCredentials: true });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка при загрузке заявок');

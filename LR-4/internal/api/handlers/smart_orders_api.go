@@ -91,19 +91,18 @@ func (h *SmartOrderAPIHandler) GetSmartOrders(w http.ResponseWriter, r *http.Req
 		query = query.Where("status = ?", status)
 	}
 
+	// Фильтрация по дате формирования (только для модераторов)
+	// Используем DATE() для извлечения даты без времени
 	if dateFromStr != "" {
-		if dateFrom, err := time.Parse("2006-01-02", dateFromStr); err == nil {
-			query = query.Where("created_at >= ?", dateFrom)
-		}
+		query = query.Where("DATE(formed_at) >= ?", dateFromStr)
 	}
 
 	if dateToStr != "" {
-		if dateTo, err := time.Parse("2006-01-02", dateToStr); err == nil {
-			query = query.Where("created_at <= ?", dateTo.AddDate(0, 0, 1))
-		}
+		query = query.Where("DATE(formed_at) <= ?", dateToStr)
 	}
 
 	result := query.Find(&orders)
+	log.Printf("[DEBUG] Найдено заявок: %d (статус: %s, от: %s, до: %s)", len(orders), status, dateFromStr, dateToStr)
 	if result.Error != nil {
 		http.Error(w, result.Error.Error(), http.StatusInternalServerError)
 		return
