@@ -196,11 +196,8 @@ const OrderPage: React.FC = () => {
 
   return (
     <Container className="mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="mb-4">
         <h2>{isDraft ? 'Моя корзина (Черновик заявки)' : `Детали заявки #${order.id}`}</h2>
-        <Button variant="secondary" onClick={() => navigate(isDraft ? '/devices' : '/orders')}>
-          {isDraft ? 'Продолжить покупки' : 'Назад к списку'}
-        </Button>
       </div>
 
       {!isDraft && (
