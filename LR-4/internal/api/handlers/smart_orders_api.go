@@ -446,7 +446,7 @@ func (h *SmartOrderAPIHandler) ReceiveTrafficResult(w http.ResponseWriter, r *ht
 
 	// Проверка токена
 	if req.Token != SECRET_TOKEN {
-		http.Error(w, "Invalid token", http.StatusUnauthorized)
+		http.Error(w, "Invalid token", http.StatusForbidden)
 		return
 	}
 
