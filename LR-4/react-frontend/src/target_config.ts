@@ -1,7 +1,10 @@
-const target_tauri = true
+// Конфигурация API endpoints
+// Использует переменные окружения для dev режима, абсолютные URL для production
 
-export const api_proxy_addr = "http://109.252.222.30:8082"
-export const img_proxy_addr = "http://109.252.222.30:9000"
-export const dest_api = (target_tauri) ? api_proxy_addr : "/api"
-export const dest_img =  (target_tauri) ?  img_proxy_addr : "/img-proxy"
-export const dest_root = (target_tauri) ? "" : "/RIP-Part-2"
+export const BASE_API_URL = import.meta.env.VITE_API_URL || "http://192.168.1.12:8082/api";
+export const BASE_IMG_URL = import.meta.env.VITE_IMG_URL || "http://192.168.1.12:9000";
+
+// Логирование для отладки
+console.log('🌐 API URL:', BASE_API_URL);
+console.log('🖼️ IMG URL:', BASE_IMG_URL);
+console.log('🔧 Mode:', import.meta.env.MODE);

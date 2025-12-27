@@ -55,18 +55,18 @@ func main() {
 	http.HandleFunc("/smart-cart/count", middleware.LoggingMiddleware(handlers.GetSmartCartCountHandler))
 	http.HandleFunc("/request/", middleware.LoggingMiddleware(handlers.RequestByIDHandler))
 
-	// API маршруты аутентификации с применением middleware
-	http.HandleFunc("/api/auth/login", middleware.LoggingMiddleware(middleware.ValidationMiddleware(authMiddleware.Login)))
-	http.HandleFunc("/api/auth/logout", middleware.LoggingMiddleware(authMiddleware.Logout))
-	http.HandleFunc("/api/auth/session", middleware.LoggingMiddleware(authMiddleware.GetSessionInfo))
-	http.HandleFunc("/api/auth/sessions", middleware.LoggingMiddleware(authMiddleware.RequireModerator(authMiddleware.GetAllSessions)))
+	// API маршруты аутентификации с применением middleware и CORS
+	http.HandleFunc("/api/auth/login", middleware.CORSMiddleware(middleware.LoggingMiddleware(middleware.ValidationMiddleware(authMiddleware.Login))))
+	http.HandleFunc("/api/auth/logout", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.Logout)))
+	http.HandleFunc("/api/auth/session", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.GetSessionInfo)))
+	http.HandleFunc("/api/auth/sessions", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireModerator(authMiddleware.GetAllSessions))))
 
 	// НОВЫЕ LUA-ENDPOINTS для отображения пользователей
-	http.HandleFunc("/api/auth/users-info", authMiddleware.RequireModerator(authMiddleware.GetUsersInfo))
-	http.HandleFunc("/api/auth/session-stats", authMiddleware.RequireModerator(authMiddleware.GetSessionStats))
+	http.HandleFunc("/api/auth/users-info", middleware.CORSMiddleware(authMiddleware.RequireModerator(authMiddleware.GetUsersInfo)))
+	http.HandleFunc("/api/auth/session-stats", middleware.CORSMiddleware(authMiddleware.RequireModerator(authMiddleware.GetSessionStats)))
 
-	// API маршруты - Smart Devices с применением middleware
-	http.HandleFunc("/api/smart-devices", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	// API маршруты - Smart Devices с применением middleware и CORS
+	http.HandleFunc("/api/smart-devices", middleware.CORSMiddleware(middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodGet:
 			smartDeviceAPI.GetSmartDevices(w, r)
@@ -75,10 +75,10 @@ func main() {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	}))
+	})))
 
-	// Обработка всех /api/smart-devices/... маршрутов с применением middleware
-	http.HandleFunc("/api/smart-devices/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	// Обработка всех /api/smart-devices/... маршрутов с применением middleware и CORS
+	http.HandleFunc("/api/smart-devices/", middleware.CORSMiddleware(middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		switch {
@@ -104,14 +104,14 @@ func main() {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		}
-	}))
+	})))
 
-	// API маршруты - Smart Orders с применением middleware
-	http.HandleFunc("/api/smart-orders/cart", middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetCart)))
-	http.HandleFunc("/api/smart-orders", middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrders)))
+	// API маршруты - Smart Orders с применением middleware и CORS
+	http.HandleFunc("/api/smart-orders/cart", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetCart))))
+	http.HandleFunc("/api/smart-orders", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireAuth(smartOrderAPI.GetSmartOrders))))
 
-	// Обработка всех /api/smart-orders/... маршрутов с применением middleware
-	http.HandleFunc("/api/smart-orders/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	// Обработка всех /api/smart-orders/... маршрутов с применением middleware и CORS
+	http.HandleFunc("/api/smart-orders/", middleware.CORSMiddleware(middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		switch {
@@ -140,10 +140,10 @@ func main() {
 				http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 			}
 		}
-	}))
+	})))
 
-	// API маршруты - Order Items с применением middleware
-	http.HandleFunc("/api/order-items/", middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
+	// API маршруты - Order Items с применением middleware и CORS
+	http.HandleFunc("/api/order-items/", middleware.CORSMiddleware(middleware.LoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
 			middleware.ValidationMiddleware(authMiddleware.RequireAuth(orderItemAPI.UpdateOrderItem))(w, r)
@@ -152,15 +152,15 @@ func main() {
 		default:
 			http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 		}
-	}))
+	})))
 
-	// API маршруты - Clients с применением middleware
-	http.HandleFunc("/api/clients/login", middleware.LoggingMiddleware(clientAPI.Login))
-	http.HandleFunc("/api/clients/logout", middleware.LoggingMiddleware(clientAPI.Logout))
-	http.HandleFunc("/api/clients/register", middleware.LoggingMiddleware(middleware.ValidationMiddleware(clientAPI.CreateClient)))
-	http.HandleFunc("/api/clients/update", middleware.LoggingMiddleware(authMiddleware.RequireAuth(clientAPI.UpdateClient)))
-	http.HandleFunc("/api/clients/", middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClient)))
-	http.HandleFunc("/api/clients", middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClients)))
+	// API маршруты - Clients с применением middleware и CORS
+	http.HandleFunc("/api/clients/login", middleware.CORSMiddleware(middleware.LoggingMiddleware(clientAPI.Login)))
+	http.HandleFunc("/api/clients/logout", middleware.CORSMiddleware(middleware.LoggingMiddleware(clientAPI.Logout)))
+	http.HandleFunc("/api/clients/register", middleware.CORSMiddleware(middleware.LoggingMiddleware(middleware.ValidationMiddleware(clientAPI.CreateClient))))
+	http.HandleFunc("/api/clients/update", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireAuth(clientAPI.UpdateClient))))
+	http.HandleFunc("/api/clients/", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClient))))
+	http.HandleFunc("/api/clients", middleware.CORSMiddleware(middleware.LoggingMiddleware(authMiddleware.RequireModerator(clientAPI.GetClients))))
 
 	log.Println("🚀 Сервер запущен на http://192.168.1.12:8082")
 	log.Println("📱 HTML интерфейс доступен")

@@ -1,10 +1,14 @@
 import type { SmartDevice, SmartOrder, Client, DeviceFilter } from '../types';
+import { BASE_API_URL } from '../target_config';
 
-// Для разработки: прокси через Vite
-// Для production и Tauri: прямой доступ к API серверу
-const API_BASE_URL = import.meta.env.PROD || import.meta.env.TAURI_ENV_PLATFORM
-  ? 'http://192.168.1.12:8080/api'  // Замените на ваш локальный IP
-  : '/api';
+// Единая точка конфигурации API через target_config.ts
+const API_BASE_URL = BASE_API_URL;
+
+// Расширенное логирование для отладки
+console.log('📡 API Service initialized');
+console.log('🔗 Base API URL:', API_BASE_URL);
+console.log('🌍 Window location:', typeof window !== 'undefined' ? window.location.href : 'N/A');
+console.log('🔧 Tauri detected:', typeof window !== 'undefined' && '__TAURI__' in window);
 
 export const api = {
   // ===== DEVICES =====
@@ -15,89 +19,63 @@ export const api = {
 
     const url = `${API_BASE_URL}/smart-devices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     
-    try {
-      const response = await fetch(url);
-      if (!response.ok) throw new Error('Failed to fetch devices');
-      return response.json();
-    } catch (error) {
-      console.error('API error, using mock data:', error);
-      // Mock данные для демонстрации
-      return [
-        {
-          id: 1,
-          name: 'Умная лампочка',
-          model: 'Яндекс, E27',
-          avg_data_rate: 8,
-          data_per_hour: 0.5,
-          namespace_url: '',
-          description: 'Умная лампочка Яндекс, E27',
-          description_all: 'Умная Яндекс лампочка позволяет дистанционно управлять освещением',
-          protocol: 'Wi-Fi',
-          is_active: true,
-          created_at: new Date().toISOString()
-        },
-        {
-          id: 2,
-          name: 'Умная розетка',
-          model: 'YNDX-00340',
-          avg_data_rate: 2,
-          data_per_hour: 0.1,
-          namespace_url: '',
-          description: 'Умная розетка Яндекс YNDX-00340',
-          description_all: 'Умная розетка для дистанционного управления электроприборами',
-          protocol: 'Wi-Fi',
-          is_active: true,
-          created_at: new Date().toISOString()
-        }
-      ];
+    console.log('🔍 Fetching devices from:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('❌ Failed to fetch devices:', response.status, response.statusText);
+      throw new Error(`Failed to fetch devices: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log('✅ Devices loaded:', data.length, 'items');
+    return data;
   },
 
   async getDevice(id: number): Promise<SmartDevice> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/smart-devices/${id}`);
-      if (!response.ok) throw new Error('Failed to fetch device');
-      return response.json();
-    } catch (error) {
-      console.error('API error:', error);
-      // Mock данные
-      return {
-        id,
-        name: 'Mock Device',
-        model: 'Mock Model',
-        avg_data_rate: 10,
-        data_per_hour: 1,
-        namespace_url: '',
-        description: 'Mock description',
-        description_all: 'Mock full description',
-        protocol: 'Wi-Fi',
-        is_active: true,
-        created_at: new Date().toISOString()
-      };
+    const url = `${API_BASE_URL}/smart-devices/${id}`;
+    console.log('🔍 Fetching device from:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('❌ Failed to fetch device:', response.status, response.statusText);
+      throw new Error(`Failed to fetch device: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log('✅ Device loaded:', data);
+    return data;
   },
 
   // ===== ORDERS =====
   async getOrders(): Promise<SmartOrder[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/smart-orders`);
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      return response.json();
-    } catch (error) {
-      console.error('API error:', error);
-      return [];
+    const url = `${API_BASE_URL}/smart-orders`;
+    console.log('🔍 Fetching orders from:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('❌ Failed to fetch orders:', response.status, response.statusText);
+      throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log('✅ Orders loaded:', data.length, 'items');
+    return data;
   },
 
   // ===== CLIENTS =====
   async getClients(): Promise<Client[]> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/clients`);
-      if (!response.ok) throw new Error('Failed to fetch clients');
-      return response.json();
-    } catch (error) {
-      console.error('API error:', error);
-      return [];
+    const url = `${API_BASE_URL}/clients`;
+    console.log('🔍 Fetching clients from:', url);
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+      console.error('❌ Failed to fetch clients:', response.status, response.statusText);
+      throw new Error(`Failed to fetch clients: ${response.status} ${response.statusText}`);
     }
+    
+    const data = await response.json();
+    console.log('✅ Clients loaded:', data.length, 'items');
+    return data;
   }
 };
