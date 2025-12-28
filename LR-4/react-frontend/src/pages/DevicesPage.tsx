@@ -5,6 +5,7 @@ import type { SmartDevice } from '../types';
 import type { RootState } from '../store';
 import { setSearchFilter } from '../store/slices/deviceSlice';
 import DeviceList from '../components/Devices/DeviceList';
+import { api } from '../services/api';
 
 const DevicesPage: React.FC = () => {
   const dispatch = useDispatch();
@@ -32,17 +33,10 @@ const DevicesPage: React.FC = () => {
       setLoading(true);
       setError(null);
       
-      const queryParams = new URLSearchParams();
-      if (search && search.trim() !== '') {
-        queryParams.append('search', search.trim());
-      }
-
-      const url = `/api/smart-devices?${queryParams.toString()}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) throw new Error('Failed to load devices');
-      
-      const devicesData = await response.json();
+      // Используем api.getDevices() вместо прямого fetch
+      const devicesData = await api.getDevices({ 
+        search: search && search.trim() !== '' ? search.trim() : undefined 
+      });
       setDevices(devicesData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load devices');

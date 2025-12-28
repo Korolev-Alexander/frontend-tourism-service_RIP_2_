@@ -1,14 +1,30 @@
 import type { SmartDevice, SmartOrder, Client, DeviceFilter } from '../types';
-import { BASE_API_URL } from '../target_config';
 
-// Единая точка конфигурации API через target_config.ts
-const API_BASE_URL = BASE_API_URL;
+// Простое и надежное определение режима через Vite MODE
+// production = Tauri build, development = браузер dev
+const getBaseApiUrl = () => {
+  if (import.meta.env.MODE === 'production') {
+    // Production mode = Tauri build → используем прямой IP
+    return 'http://192.168.1.12:8082/api';
+  }
+  // Development mode = браузер → используем proxy
+  return '/api';
+};
+
+const getBaseImgUrl = () => {
+  if (import.meta.env.MODE === 'production') {
+    // Production mode = Tauri build → используем прямой IP
+    return 'http://192.168.1.12:9000';
+  }
+  // Development mode = браузер → используем proxy
+  return '/img-proxy';
+};
 
 // Расширенное логирование для отладки
 console.log('📡 API Service initialized');
-console.log('🔗 Base API URL:', API_BASE_URL);
-console.log('🌍 Window location:', typeof window !== 'undefined' ? window.location.href : 'N/A');
-console.log('🔧 Tauri detected:', typeof window !== 'undefined' && '__TAURI__' in window);
+console.log('🔧 Mode:', import.meta.env.MODE);
+console.log('🔗 Base API URL:', getBaseApiUrl());
+console.log('️ Base IMG URL:', getBaseImgUrl());
 
 export const api = {
   // ===== DEVICES =====
@@ -17,7 +33,7 @@ export const api = {
     if (filters?.search) queryParams.append('search', filters.search);
     if (filters?.protocol) queryParams.append('protocol', filters.protocol);
 
-    const url = `${API_BASE_URL}/smart-devices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+    const url = `${getBaseApiUrl()}/smart-devices${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
     
     console.log('🔍 Fetching devices from:', url);
     
@@ -33,7 +49,7 @@ export const api = {
   },
 
   async getDevice(id: number): Promise<SmartDevice> {
-    const url = `${API_BASE_URL}/smart-devices/${id}`;
+    const url = `${getBaseApiUrl()}/smart-devices/${id}`;
     console.log('🔍 Fetching device from:', url);
     
     const response = await fetch(url);
@@ -49,7 +65,7 @@ export const api = {
 
   // ===== ORDERS =====
   async getOrders(): Promise<SmartOrder[]> {
-    const url = `${API_BASE_URL}/smart-orders`;
+    const url = `${getBaseApiUrl()}/smart-orders`;
     console.log('🔍 Fetching orders from:', url);
     
     const response = await fetch(url);
@@ -65,7 +81,7 @@ export const api = {
 
   // ===== CLIENTS =====
   async getClients(): Promise<Client[]> {
-    const url = `${API_BASE_URL}/clients`;
+    const url = `${getBaseApiUrl()}/clients`;
     console.log('🔍 Fetching clients from:', url);
     
     const response = await fetch(url);
@@ -79,3 +95,6 @@ export const api = {
     return data;
   }
 };
+
+// Экспортируем функции для использования в компонентах
+export { getBaseApiUrl, getBaseImgUrl };
