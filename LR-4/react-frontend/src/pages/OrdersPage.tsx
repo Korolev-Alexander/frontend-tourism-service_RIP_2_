@@ -8,17 +8,45 @@ import type { SmartOrder } from '../api/Api';
 import OrderCard from '../components/Orders/OrderCard';
 import { useDebounce } from '../hooks/useDebounce';
 
+// Вспомогательные функции для работы с датами в формате дд.мм.гггг
+const formatDateToISO = (russianDate: string): string => {
+  if (!russianDate) return '';
+  const [day, month, year] = russianDate.split('.');
+  if (!day || !month || !year) return '';
+  return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+};
+
+const getTodayInRussianFormat = (): string => {
+  const today = new Date();
+  const day = String(today.getDate()).padStart(2, '0');
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const year = today.getFullYear();
+  return `${day}.${month}.${year}`;
+};
+
+const getTodayInISOFormat = (): string => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, '0');
+  const day = String(today.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 const OrdersPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state: RootState) => state.user);
   const { userOrders, loading, error } = useAppSelector((state: RootState) => state.order);
 
-  // Фильтры для модератора
+  // Фильтры для модератора (даты по умолчанию - сегодня в ISO формате для API)
   const [statusFilter, setStatusFilter] = useState<string>('');
-  const [dateFromFilter, setDateFromFilter] = useState<string>('');
-  const [dateToFilter, setDateToFilter] = useState<string>('');
+  const [dateFromFilter, setDateFromFilter] = useState<string>(getTodayInISOFormat());
+  const [dateToFilter, setDateToFilter] = useState<string>(getTodayInISOFormat());
   const [clientFilter, setClientFilter] = useState<string>('');
+  
+  // Отображаемые значения дат в российском формате (дд.мм.гггг)
+  const [dateFromDisplay, setDateFromDisplay] = useState<string>(getTodayInRussianFormat());
+  const [dateToDisplay, setDateToDisplay] = useState<string>(getTodayInRussianFormat());
 
   // Debounced версии для полей дат (задержка 500мс)
   const debouncedDateFrom = useDebounce(dateFromFilter, 500);
@@ -166,6 +194,39 @@ const OrdersPage: React.FC = () => {
     }
   };
 
+  // Обработчики изменения дат с валидацией российского формата
+  const handleDateFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDateFromDisplay(value);
+    
+    // Проверяем формат дд.мм.гггг
+    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    const match = value.match(dateRegex);
+    
+    if (match) {
+      const isoDate = formatDateToISO(value);
+      setDateFromFilter(isoDate);
+    } else if (value === '') {
+      setDateFromFilter('');
+    }
+  };
+
+  const handleDateToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setDateToDisplay(value);
+    
+    // Проверяем формат дд.мм.гггг
+    const dateRegex = /^(\d{2})\.(\d{2})\.(\d{4})$/;
+    const match = value.match(dateRegex);
+    
+    if (match) {
+      const isoDate = formatDateToISO(value);
+      setDateToFilter(isoDate);
+    } else if (value === '') {
+      setDateToFilter('');
+    }
+  };
+
 
   return (
     <Container className="mt-4">
@@ -193,21 +254,25 @@ const OrdersPage: React.FC = () => {
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Дата от</Form.Label>
+                  <Form.Label>Дата от (дд.мм.гггг)</Form.Label>
                   <Form.Control
-                    type="date"
-                    value={dateFromFilter}
-                    onChange={(e) => setDateFromFilter(e.target.value)}
+                    type="text"
+                    placeholder="дд.мм.гггг"
+                    value={dateFromDisplay}
+                    onChange={handleDateFromChange}
+                    maxLength={10}
                   />
                 </Form.Group>
               </Col>
               <Col md={3}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Дата до</Form.Label>
+                  <Form.Label>Дата до (дд.мм.гггг)</Form.Label>
                   <Form.Control
-                    type="date"
-                    value={dateToFilter}
-                    onChange={(e) => setDateToFilter(e.target.value)}
+                    type="text"
+                    placeholder="дд.мм.гггг"
+                    value={dateToDisplay}
+                    onChange={handleDateToChange}
+                    maxLength={10}
                   />
                 </Form.Group>
               </Col>

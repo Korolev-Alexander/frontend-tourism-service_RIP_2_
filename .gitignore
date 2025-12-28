@@ -155,3 +155,9 @@ minio-data/
 *.db
 *.sqlite
 *.sqlite3
+
+# SSL/TLS Certificates (local development)
+LR-4/react-frontend/ca.crt
+LR-4/react-frontend/ca.key
+LR-4/react-frontend/cert.crt
+LR-4/react-frontend/cert.key
