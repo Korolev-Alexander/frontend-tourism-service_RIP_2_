@@ -24,7 +24,7 @@ func NewOrderItemAPIHandler(db *gorm.DB) *OrderItemAPIHandler {
 	}
 }
 
-// POST /api/order-items - добавление устройства в корзину
+// POST /api/calculation-items - добавление устройства в расчет трафика
 func (h *OrderItemAPIHandler) AddOrderItem(w http.ResponseWriter, r *http.Request) {
 	// Получаем текущего пользователя
 	currentUser := h.authMiddleware.GetCurrentUser(r)
@@ -105,7 +105,7 @@ func (h *OrderItemAPIHandler) AddOrderItem(w http.ResponseWriter, r *http.Reques
 	}
 }
 
-// PUT /api/order-items/{deviceId} - изменение количества
+// PUT /api/calculation-items/{deviceId} - изменение количества устройства в расчете
 func (h *OrderItemAPIHandler) UpdateOrderItem(w http.ResponseWriter, r *http.Request) {
 	// Получаем текущего пользователя
 	currentUser := h.authMiddleware.GetCurrentUser(r)
@@ -114,7 +114,7 @@ func (h *OrderItemAPIHandler) UpdateOrderItem(w http.ResponseWriter, r *http.Req
 		return
 	}
 
-	idStr := r.URL.Path[len("/api/order-items/"):]
+	idStr := r.URL.Path[len("/api/calculation-items/"):]
 	deviceID, err := strconv.Atoi(idStr)
 	if err != nil {
 		http.Error(w, "Invalid device ID", http.StatusBadRequest)
@@ -162,7 +162,7 @@ func (h *OrderItemAPIHandler) UpdateOrderItem(w http.ResponseWriter, r *http.Req
 	})
 }
 
-// DELETE /api/order-items/{deviceId} - удаление из заявки
+// DELETE /api/calculation-items/{deviceId} - удаление устройства из расчета
 func (h *OrderItemAPIHandler) DeleteOrderItem(w http.ResponseWriter, r *http.Request) {
 	// Получаем текущего пользователя
 	currentUser := h.authMiddleware.GetCurrentUser(r)
@@ -175,7 +175,7 @@ func (h *OrderItemAPIHandler) DeleteOrderItem(w http.ResponseWriter, r *http.Req
 	path := r.URL.Path
 	log.Printf("🛠️ DeleteOrderItem path: %s", path)
 
-	idStr := r.URL.Path[len("/api/order-items/"):]
+	idStr := r.URL.Path[len("/api/calculation-items/"):]
 	log.Printf("🛠️ DeleteOrderItem idStr: %s", idStr)
 
 	deviceID, err := strconv.Atoi(idStr)

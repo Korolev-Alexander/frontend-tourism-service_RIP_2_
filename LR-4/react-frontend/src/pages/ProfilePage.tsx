@@ -5,18 +5,9 @@ import { setUser } from '../store/slices/userSlice';
 import type { RootState } from '../store/index';
 import api from '../api';
 
-// Определяем тип для состояния пользователя
-interface UserState {
-  id: number | null;
-  username: string | null;
-  email: string | null;
-  isAuthenticated: boolean;
-  token: string | null;
-}
-
 const ProfilePage: React.FC = () => {
   // Получаем данные пользователя из Redux
-  const user = useAppSelector((state: RootState) => state.user) as UserState;
+  const user = useAppSelector((state: RootState) => state.user);
   const dispatch = useAppDispatch();
   
   // Состояния для формы
@@ -42,7 +33,8 @@ const ProfilePage: React.FC = () => {
             id: userData.id || 0,
             username: userData.username || '',
             email: '', // Email не возвращается в API
-            token: '' // Токен не используется, так как используется сессия
+            token: '', // Токен не используется, так как используется сессия
+            isModerator: userData.is_moderator || false
           }));
           setUsername(userData.username || '');
         }
@@ -105,7 +97,12 @@ const ProfilePage: React.FC = () => {
         username: username
       };
       
-      // Добавляем пароль, если он был изменен
+      // Добавляем текущий пароль, если он указан
+      if (currentPassword) {
+        updateData.current_password = currentPassword;
+      }
+      
+      // Добавляем новый пароль, если он был изменен
       if (newPassword) {
         updateData.password = newPassword;
       }
@@ -119,7 +116,8 @@ const ProfilePage: React.FC = () => {
           id: response.data.id || 0,
           username: response.data.username || '',
           email: '', // Email не возвращается в API
-          token: '' // Токен не используется, так как используется сессия
+          token: '', // Токен не используется, так как используется сессия
+          isModerator: response.data.is_moderator || false
         }));
         
         setSuccess('Данные успешно обновлены');

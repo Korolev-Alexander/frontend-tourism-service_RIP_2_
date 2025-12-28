@@ -146,8 +146,8 @@ func main() {
 		}
 	}))
 
-	// API маршруты - Order Items
-	http.HandleFunc("/api/order-items", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
+	// API маршруты - Calculation Items (элементы расчета трафика)
+	http.HandleFunc("/api/calculation-items", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPost:
 			authMiddleware.RequireAuth(orderItemAPI.AddOrderItem)(w, r)
@@ -156,7 +156,7 @@ func main() {
 		}
 	}))
 
-	http.HandleFunc("/api/order-items/", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
+	http.HandleFunc("/api/calculation-items/", corsWrapper(func(w http.ResponseWriter, r *http.Request) {
 		switch r.Method {
 		case http.MethodPut:
 			authMiddleware.RequireAuth(orderItemAPI.UpdateOrderItem)(w, r)
@@ -208,9 +208,10 @@ func main() {
 	log.Println("   PUT    /api/smart-orders/{id}/complete - завершить заявку (модератор)")
 	log.Println("   DELETE /api/smart-orders/{id}       - удалить заявку (требует auth)")
 
-	log.Println("🛒 Order Items API:")
-	log.Println("   PUT    /api/order-items/{deviceId}  - изменить количество (требует auth)")
-	log.Println("   DELETE /api/order-items/{deviceId}  - удалить из заявки (требует auth)")
+	log.Println("🧮 Calculation Items API (расчет трафика):")
+	log.Println("   POST   /api/calculation-items        - добавить устройство в расчет (требует auth)")
+	log.Println("   PUT    /api/calculation-items/{deviceId}  - изменить количество (требует auth)")
+	log.Println("   DELETE /api/calculation-items/{deviceId}  - удалить из расчета (требует auth)")
 
 	log.Println("👥 Clients API:")
 	log.Println("   GET    /api/clients                 - список клиентов (модератор)")

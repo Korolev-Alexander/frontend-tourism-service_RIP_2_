@@ -6,6 +6,7 @@ interface UserState {
   email: string | null;
   isAuthenticated: boolean;
   token: string | null;
+  isModerator: boolean;
 }
 
 const initialState: UserState = {
@@ -14,17 +15,19 @@ const initialState: UserState = {
   email: null,
   isAuthenticated: false,
   token: null,
+  isModerator: false,
 };
 
 export const userSlice = createSlice({
   name: 'user',
   initialState,
   reducers: {
-    setUser: (state, action: PayloadAction<{ id: number; username: string; email: string; token: string }>) => {
+    setUser: (state, action: PayloadAction<{ id: number; username: string; email: string; token: string; isModerator: boolean }>) => {
       state.id = action.payload.id;
       state.username = action.payload.username;
       state.email = action.payload.email;
       state.token = action.payload.token;
+      state.isModerator = action.payload.isModerator;
       state.isAuthenticated = true;
     },
     clearUser: (state) => {
@@ -32,6 +35,7 @@ export const userSlice = createSlice({
       state.username = null;
       state.email = null;
       state.token = null;
+      state.isModerator = false;
       state.isAuthenticated = false;
     },
     setToken: (state, action: PayloadAction<string>) => {

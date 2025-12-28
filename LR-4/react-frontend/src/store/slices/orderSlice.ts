@@ -47,9 +47,13 @@ const initialState: OrderState = {
 // Async Thunk функции
 export const fetchUserOrders = createAsyncThunk(
   'order/fetchUserOrders',
-  async (_, { rejectWithValue }) => {
+  async (filters: { status?: string; dateFrom?: string; dateTo?: string } | undefined, { rejectWithValue }) => {
     try {
-      const response = await api.smartOrders.smartOrdersList();
+      const response = await api.smartOrders.smartOrdersList({
+        status: filters?.status as any,
+        date_from: filters?.dateFrom,
+        date_to: filters?.dateTo
+      });
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка при загрузке заявок');
@@ -118,10 +122,10 @@ export const addDeviceToOrder = createAsyncThunk(
   'order/addDeviceToOrder',
   async (deviceId: number, { rejectWithValue }) => {
     try {
-      // Используем прямой axios запрос для POST /api/order-items
+      // Используем прямой axios запрос для POST /api/calculation-items
       const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
       const response = await axios.post(
-        `${baseURL}/order-items`,
+        `${baseURL}/calculation-items`,
         {
           device_id: deviceId,
           quantity: 1
@@ -132,7 +136,7 @@ export const addDeviceToOrder = createAsyncThunk(
       );
       return response.data;
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Ошибка при добавлении устройства');
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при добавлении устройства в расчет');
     }
   }
 );
@@ -175,6 +179,32 @@ export const submitDraftOrder = createAsyncThunk(
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Ошибка при оформлении заявки');
+    }
+  }
+);
+
+// Одобрение заявки модератором
+export const completeOrder = createAsyncThunk(
+  'order/completeOrder',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      const response = await api.smartOrders.completeUpdate(orderId);
+      return response.data;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при одобрении заявки');
+    }
+  }
+);
+
+// Отклонение заявки модератором
+export const rejectOrder = createAsyncThunk(
+  'order/rejectOrder',
+  async (orderId: number, { rejectWithValue }) => {
+    try {
+      await api.smartOrders.smartOrdersDelete(orderId);
+      return orderId;
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Ошибка при отклонении заявки');
     }
   }
 );

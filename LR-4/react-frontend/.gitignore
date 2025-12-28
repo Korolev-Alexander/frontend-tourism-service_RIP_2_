@@ -22,3 +22,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# SSL Certificates
+ca.crt
+ca.key
+cert.crt
+cert.key
+
+# SSL certificates
+ca.crt
+ca.key
+cert.crt
+cert.key

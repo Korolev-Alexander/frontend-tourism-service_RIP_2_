@@ -774,12 +774,12 @@ export class Api<
   };
   orderItems = {
     /**
-     * @description Изменение количества устройства в текущей корзине пользователя
+     * @description Изменение количества устройства в текущем расчете трафика пользователя
      *
      * @tags OrderItems
      * @name OrderItemsUpdate
-     * @summary Изменить количество устройства в заявке
-     * @request PUT:/order-items/{deviceId}
+     * @summary Изменить количество устройства в расчете
+     * @request PUT:/calculation-items/{deviceId}
      * @secure
      */
     orderItemsUpdate: (
@@ -801,7 +801,7 @@ export class Api<
         },
         void
       >({
-        path: `/order-items/${deviceId}`,
+        path: `/calculation-items/${deviceId}`,
         method: "PUT",
         body: data,
         secure: true,
@@ -811,17 +811,17 @@ export class Api<
       }),
 
     /**
-     * @description Удаление устройства из текущей корзины пользователя
+     * @description Удаление устройства из текущего расчета трафика пользователя
      *
      * @tags OrderItems
      * @name OrderItemsDelete
-     * @summary Удалить устройство из заявки
-     * @request DELETE:/order-items/{deviceId}
+     * @summary Удалить устройство из расчета
+     * @request DELETE:/calculation-items/{deviceId}
      * @secure
      */
     orderItemsDelete: (deviceId: number, params: RequestParams = {}) =>
       this.request<void, void>({
-        path: `/order-items/${deviceId}`,
+        path: `/calculation-items/${deviceId}`,
         method: "DELETE",
         secure: true,
         ...params,

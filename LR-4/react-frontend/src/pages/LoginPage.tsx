@@ -45,7 +45,8 @@ const LoginPage: React.FC = () => {
           id: response.data.user.id || 0,
           username: response.data.user.username || '',
           email: '', // Email не возвращается в ответе API
-          token: '' // Токен не возвращается, так как используется сессия
+          token: '', // Токен не возвращается, так как используется сессия
+          isModerator: response.data.user.is_moderator || false
         }));
         
         // Перенаправляем на главную страницу
