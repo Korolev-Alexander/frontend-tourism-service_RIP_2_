@@ -1,18 +1,24 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "react-frontend",
+  "productName": "Smart Devices Manager",
   "version": "0.1.0",
-  "identifier": "com.example.react-frontend",
+  "identifier": "com.smartdevices.manager",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "http://localhost:5173",
+    "devUrl": "http://192.168.1.12:5173",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
+  "plugins": {
+    "http": {
+      "enabled": true
+    }
+  },
   "app": {
+    "withGlobalTauri": true,
     "windows": [
       {
-        "title": "react-frontend",
+        "title": "Smart Devices Manager",
         "width": 800,
         "height": 600,
         "resizable": true,
@@ -20,7 +26,7 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self' http://192.168.1.12:5173; img-src 'self' http://192.168.1.12:9000 data: blob:; connect-src 'self' http://192.168.1.12:8082; script-src 'self'; style-src 'self' 'unsafe-inline';"
     }
   },
   "bundle": {

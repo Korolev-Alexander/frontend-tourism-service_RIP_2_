@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Card, Button, Badge } from 'react-bootstrap';
 import type { SmartDevice } from '../../types';
+import { dest_img } from '../../target_config';
 
 interface DeviceCardProps {
   device: SmartDevice;
@@ -10,6 +11,14 @@ interface DeviceCardProps {
 const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
   const getDefaultImage = () => {
     return '/default-device.png';
+  };
+
+  const getImageUrl = (url: string | null) => {
+    if (!url) return getDefaultImage();
+    // Если URL уже полный (начинается с http), используем его как есть
+    if (url.startsWith('http')) return url;
+    // Иначе добавляем префикс dest_img
+    return `${dest_img}${url}`;
   };
 
   const getProtocolColor = (protocol: string) => {
@@ -30,7 +39,7 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
       }}>
         <Card.Img 
           variant="top" 
-          src={device.namespace_url || getDefaultImage()}
+          src={getImageUrl(device.namespace_url)}
           alt={device.name}
           style={{ 
             height: '100%', 

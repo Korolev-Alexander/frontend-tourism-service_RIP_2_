@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Spinner, Alert, Button } from 'react-bootstrap';
 import type { SmartDevice } from '../types';
 import { api } from '../services/api';
+import { dest_img } from '../target_config';
 
 const DeviceDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -30,6 +31,14 @@ const DeviceDetailPage: React.FC = () => {
 
   const getDefaultImage = () => {
     return '/default-device.png';
+  };
+
+  const getImageUrl = (url: string | null) => {
+    if (!url) return getDefaultImage();
+    // Если URL уже полный (начинается с http), используем его как есть
+    if (url.startsWith('http')) return url;
+    // Иначе добавляем префикс dest_img
+    return `${dest_img}${url}`;
   };
 
   if (loading) {
@@ -61,7 +70,7 @@ const DeviceDetailPage: React.FC = () => {
           <Card>
             <Card.Img 
               variant="top" 
-              src={device.namespace_url || getDefaultImage()}
+              src={getImageUrl(device.namespace_url)}
               alt={device.name}
               onError={(e) => {
                 const target = e.target as HTMLImageElement;
