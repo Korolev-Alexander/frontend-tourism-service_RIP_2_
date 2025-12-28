@@ -79,5 +79,7 @@ func (m *MinIOClient) DeleteFile(filename string) error {
 }
 
 func (m *MinIOClient) GetImageURL(filename string) string {
-	return fmt.Sprintf("http://localhost:9000/%s/%s", m.bucket, filename)
+	// Возвращаем относительный URL для работы через прокси Vite
+	// Прокси /img-proxy перенаправит на MinIO
+	return fmt.Sprintf("/img-proxy/%s/%s", m.bucket, filename)
 }

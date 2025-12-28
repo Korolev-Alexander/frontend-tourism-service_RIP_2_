@@ -1,7 +1,5 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
-import { useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/core';
 import 'bootstrap/dist/css/bootstrap.min.css';
 
 import AppNavbar from './components/Layout/Navbar';
@@ -11,17 +9,6 @@ import DevicesPage from './pages/DevicesPage';
 import DeviceDetailPage from './pages/DeviceDetailPage';
 
 function App() {
-  useEffect(()=>{
-    invoke('tauri', {cmd:'create'})
-      .then(() =>{console.log("Tauri launched")})
-      .catch(() =>{console.log("Tauri not launched")})
-    return () =>{
-      invoke('tauri', {cmd:'close'})
-        .then(() =>{console.log("Tauri launched")})
-        .catch(() =>{console.log("Tauri not launched")})
-    }
-  }, [])
-
   return (
     <Router>
       <AppNavbar />

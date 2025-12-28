@@ -31,13 +31,22 @@ type SmartDeviceCreateRequest struct {
 }
 
 func SmartDeviceToJSON(device models.SmartDevice) SmartDeviceResponse {
+	// Исправляем старые URL из БД (http://localhost:9000/ -> /img-proxy/)
+	namespaceURL := device.NamespaceURL
+	if len(namespaceURL) > 0 && namespaceURL[:4] == "http" {
+		// Заменяем http://localhost:9000/ на /img-proxy/
+		if len(namespaceURL) > 21 && namespaceURL[:21] == "http://localhost:9000" {
+			namespaceURL = "/img-proxy" + namespaceURL[21:]
+		}
+	}
+
 	return SmartDeviceResponse{
 		ID:             device.ID,
 		Name:           device.Name,
 		Model:          device.Model,
 		AvgDataRate:    device.AvgDataRate,
 		DataPerHour:    device.DataPerHour,
-		NamespaceURL:   device.NamespaceURL,
+		NamespaceURL:   namespaceURL,
 		Description:    device.Description,
 		DescriptionAll: device.DescriptionAll,
 		Protocol:       device.Protocol,

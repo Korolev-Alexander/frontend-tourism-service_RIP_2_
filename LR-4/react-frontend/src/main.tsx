@@ -4,6 +4,7 @@ import { Provider } from 'react-redux'
 import { store } from './store'
 import App from './App.tsx'
 import './index.css'
+import { registerSW } from 'virtual:pwa-register'
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -12,3 +13,8 @@ createRoot(document.getElementById('root')!).render(
     </Provider>
   </React.StrictMode>,
 )
+
+// Регистрация Service Worker для PWA
+if ('serviceWorker' in navigator) {
+  registerSW()
+}
