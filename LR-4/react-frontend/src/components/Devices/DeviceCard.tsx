@@ -15,8 +15,13 @@ const DeviceCard: React.FC<DeviceCardProps> = ({ device }) => {
 
   const getImageUrl = (url: string | null) => {
     if (!url) return getDefaultImage();
-    // Если URL уже полный (начинается с http), используем его как есть
-    if (url.startsWith('http')) return url;
+    
+    // Если URL уже полный (начинается с http)
+    if (url.startsWith('http')) {
+      // Заменяем localhost на IP для Tauri
+      return url.replace('http://localhost:9000', getBaseImgUrl());
+    }
+    
     // Иначе добавляем префикс из getBaseImgUrl()
     return `${getBaseImgUrl()}${url}`;
   };

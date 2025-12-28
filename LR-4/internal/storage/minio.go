@@ -79,5 +79,5 @@ func (m *MinIOClient) DeleteFile(filename string) error {
 }
 
 func (m *MinIOClient) GetImageURL(filename string) string {
-	return fmt.Sprintf("http://localhost:9000/%s/%s", m.bucket, filename)
+	return fmt.Sprintf("http://192.168.1.12:9000/%s/%s", m.bucket, filename)
 }
